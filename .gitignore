@@ -63,7 +63,6 @@ ehthumbs.db
 # ==========================================
 # Project-specific: Heavy / Raw Data
 # ==========================================
-raw_data/
 outputs/
 scratch/
 sql/
@@ -88,4 +87,4 @@ sql/
 # ==========================================
 # Power BI (large binary file, optional)
 # ==========================================
-Power BI/*.pbix
+# Power BI/*.pbix (Allowed per user request)
