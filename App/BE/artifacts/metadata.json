@@ -1,0 +1,64 @@
+{
+    "threshold": 0.5,
+    "features": [
+        "person_age",
+        "person_income_log",
+        "other_debt_log",
+        "person_emp_length",
+        "loan_amnt",
+        "loan_int_rate",
+        "loan_term_months",
+        "loan_percent_income",
+        "debt_to_income_ratio",
+        "loan_to_income_ratio",
+        "credit_utilization_ratio",
+        "cb_person_cred_hist_length",
+        "open_accounts",
+        "has_prior_default",
+        "past_delinquencies",
+        "emp_length_missing",
+        "loan_int_rate_missing",
+        "high_loan_burden_flag",
+        "person_home_ownership",
+        "loan_intent",
+        "employment_type",
+        "education_level"
+    ],
+    "categorical_categories": {
+        "person_home_ownership": [
+            "MORTGAGE",
+            "OTHER",
+            "OWN",
+            "RENT"
+        ],
+        "loan_intent": [
+            "DEBTCONSOLIDATION",
+            "EDUCATION",
+            "HOMEIMPROVEMENT",
+            "MEDICAL",
+            "PERSONAL",
+            "VENTURE"
+        ],
+        "employment_type": [
+            "Full-time",
+            "Part-time",
+            "Self-employed",
+            "Unemployed"
+        ],
+        "education_level": [
+            "Bachelor",
+            "High School",
+            "Master",
+            "PhD"
+        ]
+    },
+    "score_min": 300,
+    "score_max": 850,
+    "pdo": 20,
+    "base_score": 600,
+    "band_config": {
+        "high_risk_max": 616,
+        "medium_risk_max": 643
+    },
+    "model_version": "lgbm_tuned"
+}

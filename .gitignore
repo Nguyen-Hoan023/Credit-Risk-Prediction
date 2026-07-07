@@ -1,0 +1,91 @@
+# ==========================================
+# Python (Backend - FastAPI)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environment
+App/BE/venv/
+venv/
+env/
+ENV/
+.venv/
+
+# Pip logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================================
+# Environment Variables (sensitive data)
+# ==========================================
+.env
+.env.local
+.env.*.local
+
+# ==========================================
+# Jupyter Notebooks
+# ==========================================
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# ==========================================
+# Node.js & Next.js (Frontend)
+# ==========================================
+App/FE/node_modules/
+App/FE/.next/
+App/FE/out/
+App/FE/build/
+App/FE/.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.pnp.*
+
+# ==========================================
+# IDEs & Editor files
+# ==========================================
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ==========================================
+# OS & System files
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ==========================================
+# Project-specific: Heavy / Raw Data
+# ==========================================
+raw_data/
+outputs/
+scratch/
+sql/
+
+# ==========================================
+# Project-specific: Large ML Model files
+# ==========================================
+# Ignore all large model binary formats...
+*.pkl
+*.joblib
+*.h5
+*.pb
+*.onnx
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# ...EXCEPT the deployed model in App/BE/artifacts (only ~1.8MB, needed for API)
+!App/BE/artifacts/*.pkl
+
+# ==========================================
+# Power BI (large binary file, optional)
+# ==========================================
+Power BI/*.pbix
