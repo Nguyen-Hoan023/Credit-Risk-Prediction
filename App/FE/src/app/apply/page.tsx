@@ -14,9 +14,6 @@ export default function ApplyPage() {
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Đánh Giá Hồ Sơ Vay
         </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-slate-600">
-          Nhập đầy đủ thông tin khách hàng và khoản vay đề xuất. Hệ thống sẽ tự động đối chiếu các luật nghiệp vụ và chạy mô hình chấm điểm tín dụng nội bộ để xuất báo cáo đánh giá rủi ro.
-        </p>
       </div>
 
       {/* Error alert if any */}
