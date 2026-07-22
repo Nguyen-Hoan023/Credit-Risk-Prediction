@@ -3,12 +3,12 @@ main.py -- FastAPI entry point.
 Su dung lifespan context manager (chuan FastAPI hien dai) de load model luc startup.
 """
 
-from typing import List
+from typing import List, Optional
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 import os
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -26,6 +26,23 @@ from scoring import (
 from database.connection import get_db
 from database.models import Prediction, ModelMetadata
 import database.crud as crud
+
+# Cấu hình Admin Key bảo vệ các Endpoint nguy hiểm (như Xóa lịch sử)
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
+
+def verify_admin_key(x_admin_key: Optional[str] = Header(None)):
+    """Xác thực Admin Key trước khi cho phép thực hiện hành động nguy hiểm."""
+    if not ADMIN_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chức năng bị khóa: ADMIN_API_KEY chưa được cấu hình ở Backend.",
+        )
+    if x_admin_key != ADMIN_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Xác thực thất bại: X-Admin-Key không chính xác.",
+        )
+    return True
 
 
 # Lifespan -- Load model 1 lan khi server khoi dong
@@ -82,9 +99,6 @@ app = FastAPI(
 )
 
 # CORS -- cho phep Frontend goi API
-# Doc tu bien moi truong ALLOWED_ORIGINS (phan cach nhau boi dau phay)
-# Dev: mac dinh cho phep localhost:3000 va :3001
-# Production: set ALLOWED_ORIGINS=https://your-domain.com trong .env
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
 ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
@@ -135,13 +149,13 @@ async def predict(request: PredictRequest, db: Session = Depends(get_db)):
             education_level=request.education_level,
         )
 
-        # 2. Predict probability of default (pipeline tu impute -> cast -> predict)
+        # 2. Predict probability of default
         prob = predict_proba(df)
 
-        # 3. Probability -> Credit Score (Log-Odds)
+        # 3. Probability -> Credit Score
         score = prob_to_score(prob)
 
-        # 4. Score -> Risk Tier & Decision (tu model)
+        # 4. Score -> Risk Tier & Decision
         risk_level = assign_risk_tier(score)
         decision = assign_decision(score)
         approved = is_approved(score)
@@ -151,7 +165,7 @@ async def predict(request: PredictRequest, db: Session = Depends(get_db)):
         loan_to_income_ratio = request.loan_amnt / safe_income
         debt_to_income_ratio = (request.other_debt + request.loan_amnt) / safe_income
 
-        # 6. Ap dung luat nghiep vu (2 tang: knock-out + soft downgrade)
+        # 6. Ap dung luat nghiep vu
         score, risk_level, decision, approved = apply_business_rules(
             score=score,
             risk_level=risk_level,
@@ -163,7 +177,7 @@ async def predict(request: PredictRequest, db: Session = Depends(get_db)):
             debt_to_income_ratio=debt_to_income_ratio,
         )
 
-        # 7. Sinh khuyen nghi hanh dong (dua tren risk_level sau luat)
+        # 7. Sinh khuyen nghi hanh dong
         recommendations = generate_recommendations(
             score=score,
             risk_level=risk_level,
@@ -226,7 +240,7 @@ async def predict(request: PredictRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Loi khi xu ly ho so: {str(e)}",
+            detail=f"Error processing application: {str(e)}",
         )
 
 
@@ -246,15 +260,15 @@ async def get_history(limit: int = 100, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Loi khi truy van lich su tu database: {str(e)}",
+            detail=f"Error querying history from database: {str(e)}",
         )
 
 
-# DELETE /api/history
-@app.delete("/api/history", tags=["History"])
+# DELETE /api/history (Yêu cầu xác thực Admin Key)
+@app.delete("/api/history", tags=["History"], dependencies=[Depends(verify_admin_key)])
 async def clear_history(db: Session = Depends(get_db)):
     """
-    Xoa toan bo lich su danh gia trong co so du lieu.
+    Xoa toan bo lich su danh gia trong co so du lieu (Yêu cầu X-Admin-Key).
     """
     if db is None:
         raise HTTPException(
@@ -268,5 +282,5 @@ async def clear_history(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Loi khi xoa lich su: {str(e)}",
+            detail=f"Error clearing history: {str(e)}",
         )

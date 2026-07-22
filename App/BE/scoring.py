@@ -1,6 +1,9 @@
 """
 scoring.py -- Chuyen doi xac suat vo no -> Credit Score (Log-Odds) -> Risk Tier
 va sinh khuyen nghi hanh dong theo luat nguong nghiep vu ngan hang.
+
+I18N: Tat ca output deu la ma chuan tieng Anh (APPROVE/REVIEW/REJECT, reason codes).
+Frontend se dich cac ma nay sang ngon ngu tuong ung (vi/en).
 """
 
 import json
@@ -51,15 +54,15 @@ def assign_risk_tier(score: int) -> str:
         return "low"
 
 
-# Score -> Quyet dinh
+# Score -> Quyet dinh (I18N: tra ve ma chuan tieng Anh)
 def assign_decision(score: int) -> str:
-    """TU CHOI / XEM XET / PHE DUYET dua tren risk tier."""
+    """REJECT / REVIEW / APPROVE dua tren risk tier."""
     if score <= HIGH_RISK_MAX:
-        return "TỪ CHỐI"
+        return "REJECT"
     elif score <= MEDIUM_RISK_MAX:
-        return "XEM XÉT"
+        return "REVIEW"
     else:
-        return "PHÊ DUYỆT"
+        return "APPROVE"
 
 
 def is_approved(score: int) -> bool:
@@ -68,6 +71,8 @@ def is_approved(score: int) -> bool:
 
 
 # Khuyen nghi hanh dong (Rule-Based Thresholds)
+# I18N: Tra ve danh sach reason code objects thay vi chuoi text tieng Viet.
+# Frontend se dich cac ma nay sang ngon ngu tuong ung.
 def generate_recommendations(
     score: int,
     risk_level: str,
@@ -81,81 +86,97 @@ def generate_recommendations(
     debt_to_income_ratio: float,
     person_home_ownership: str = None,
     loan_intent: str = None,
-) -> list[str]:
+) -> list[dict]:
     """
     Sinh danh sach khuyen nghi dua tren luat nguong nghiep vu ngan hang.
     Cac nguong duoc rut ra tu phan tich EDA va best practices tin dung.
+
+    Tra ve list of dict: [{"code": "REASON_CODE", "params": {"key": "value"}}]
     """
-    recs: list[str] = []
+    recs: list[dict] = []
 
     # Khuyen nghi tong quat theo risk level
     if risk_level == "low":
-        recs.append(
-            f"Hồ sơ có điểm tín dụng tốt ({score}). Khuyến nghị PHÊ DUYỆT khoản vay."
-        )
+        recs.append({
+            "code": "GOOD_SCORE",
+            "params": {"score": score}
+        })
     elif risk_level == "medium":
-        recs.append(
-            f"Hồ sơ ở mức rủi ro trung bình ({score}). Cần xem xét thêm trước khi phê duyệt."
-        )
+        recs.append({
+            "code": "MEDIUM_SCORE",
+            "params": {"score": score}
+        })
     else:
-        recs.append(
-            f"Hồ sơ có rủi ro cao ({score}). Khuyến nghị TỪ CHỐI hoặc yêu cầu bổ sung tài sản đảm bảo."
-        )
-
+        recs.append({
+            "code": "HIGH_RISK_SCORE",
+            "params": {"score": score}
+        })
 
     # Tien su vo no
     if cb_person_default_on_file == "Y":
-        recs.append(
-            "Có tiền sử vỡ nợ trước đây. Đây là yếu tố rủi ro nghiêm trọng, "
-            "ảnh hưởng lớn đến quyết định phê duyệt."
-        )
+        recs.append({
+            "code": "PRIOR_DEFAULT",
+            "params": {}
+        })
 
     # So lan tre han
     if past_delinquencies > 0:
-        recs.append(
-            f"Lịch sử ghi nhận {past_delinquencies} lần trễ hạn thanh toán. "
-            f"Vui lòng thiết lập thanh toán tự động để đảm bảo đúng hạn trong tương lai."
-        )
+        recs.append({
+            "code": "PAST_DELINQUENCIES",
+            "params": {"count": past_delinquencies}
+        })
 
     # Ty le vay / thu nhap
     if loan_to_income_ratio >= 0.50:
-        recs.append(
-            f"Tỷ lệ khoản vay/thu nhập rất cao ({loan_to_income_ratio:.1%}). "
-            f"Nên giảm đáng kể số tiền đề nghị vay hoặc tăng nguồn thu nhập."
-        )
+        recs.append({
+            "code": "VERY_HIGH_LTI",
+            "params": {"ratio": f"{loan_to_income_ratio:.1%}"}
+        })
     elif loan_to_income_ratio >= 0.30:
-        recs.append(
-            f"Tỷ lệ khoản vay/thu nhập khá cao ({loan_to_income_ratio:.1%}). "
-            f"Cân nhắc kéo dài thời hạn vay hoặc giảm số tiền vay."
-        )
+        recs.append({
+            "code": "HIGH_LTI",
+            "params": {"ratio": f"{loan_to_income_ratio:.1%}"}
+        })
 
     # Ty le no / thu nhap (DTI)
     if debt_to_income_ratio >= 0.60:
-        recs.append(
-            f"Tổng nợ trên thu nhập ở mức báo động ({debt_to_income_ratio:.1%}). "
-            f"Nên giảm bớt các khoản nợ tiêu dùng khác trước khi nộp đơn vay mới."
-        )
+        recs.append({
+            "code": "CRITICAL_DTI",
+            "params": {"ratio": f"{debt_to_income_ratio:.1%}"}
+        })
     elif debt_to_income_ratio >= 0.40:
-        recs.append(
-            f"Tổng nợ trên thu nhập ở mức cao ({debt_to_income_ratio:.1%}). "
-            f"Giảm DTI dưới 40% sẽ cải thiện khả năng được phê duyệt."
-        )
+        recs.append({
+            "code": "HIGH_DTI",
+            "params": {"ratio": f"{debt_to_income_ratio:.1%}"}
+        })
 
     # Tinh trang nha o (person_home_ownership)
     if person_home_ownership:
         home_upper = person_home_ownership.upper()
         if home_upper == "RENT":
-            recs.append("Khách hàng hiện đang thuê nhà, chưa có tài sản đảm bảo vững chắc. Khuyến nghị bổ sung tài sản thế chấp hoặc người bảo lãnh để giảm thiểu rủi ro.")
+            recs.append({
+                "code": "RENTER_NO_COLLATERAL",
+                "params": {}
+            })
         elif home_upper == "OWN":
-            recs.append("Khách hàng có tài sản đảm bảo. Khuyến nghị ưu tiên phê duyệt nhanh hoặc áp dụng chính sách ưu đãi hạn mức.")
+            recs.append({
+                "code": "OWNER_HAS_COLLATERAL",
+                "params": {}
+            })
 
     # Muc dich vay (loan_intent)
     if loan_intent:
         intent_upper = loan_intent.upper()
         if intent_upper in ["DEBTCONSOLIDATION", "HOMEIMPROVEMENT", "MEDICAL"]:
-            recs.append("Mục đích sử dụng có rủi ro, cần kiểm soát chặt chẽ (Cơ cấu nợ/Sửa nhà/Y tế). Yêu cầu bổ sung chứng từ chứng minh phương án sử dụng vốn; cân nhắc áp dụng biên độ lãi suất bổ sung hoặc tài sản bảo đảm.")
+            recs.append({
+                "code": "RISKY_LOAN_PURPOSE",
+                "params": {}
+            })
         elif intent_upper in ["VENTURE", "EDUCATION"]:
-            recs.append("Mục đích sử dụng tốt và có tạo ra lợi nhuận. Khuyến nghị hỗ trợ áp dụng các gói lãi suất ưu đãi và tối ưu hóa thời gian xử lý hồ sơ.")
+            recs.append({
+                "code": "GOOD_LOAN_PURPOSE",
+                "params": {}
+            })
 
     return recs
 
@@ -205,7 +226,7 @@ def apply_business_rules(
 
     if knockout:
         final_score = min(score, 500)
-        return final_score, "high", "TỪ CHỐI", False
+        return final_score, "high", "REJECT", False
 
     # Tang 2: Soft Downgrade
     soft_flag = (
@@ -222,7 +243,7 @@ def apply_business_rules(
     )
 
     if soft_flag and risk_level == "low":
-        return score, "medium", "XEM XÉT", True
+        return score, "medium", "REVIEW", True
 
     # Khong vi pham gi  gui nguyen
     return score, risk_level, decision, approved

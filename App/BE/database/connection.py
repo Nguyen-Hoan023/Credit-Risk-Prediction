@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 
 engine = None
 SessionLocal = None
@@ -18,6 +19,15 @@ else:
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
         
+    is_supabase_cloud = "supabase.co" in DATABASE_URL or "supabase.com" in DATABASE_URL
+    if ENVIRONMENT == "development" and is_supabase_cloud:
+        print("\n" + "="*70)
+        print("[database/connection.py] ⚠️  CẢNH BÁO MÔI TRƯỜNG:")
+        print("Backend đang chạy ở môi trường LOCAL/DEVELOPMENT nhưng kết nối tới SUPABASE PRODUCTION!")
+        print("Mọi thao tác sửa/xóa dữ liệu sẽ ảnh hưởng trực tiếp đến Database Online.")
+        print("Khuyên dùng: Đổi DATABASE_URL sang Postgres local hoặc Supabase Dev project.")
+        print("="*70 + "\n")
+
     try:
         engine = create_engine(DATABASE_URL, pool_pre_ping=True)
         SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)

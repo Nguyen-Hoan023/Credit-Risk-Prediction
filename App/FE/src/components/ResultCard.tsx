@@ -1,12 +1,8 @@
 "use client";
 
-import { CreditScoreResponse } from "@/lib/types";
-import {
-  RISK_COLORS,
-  getRiskLabel,
-  getApprovalLabel,
-  getApprovalTitle,
-} from "@/lib/constants";
+import { useTranslations } from "next-intl";
+import { CreditScoreResponse, RecommendationItem } from "@/lib/types";
+import { RISK_COLORS } from "@/lib/constants";
 import CreditScoreGauge from "./CreditScoreGauge";
 import RecommendationBox from "./RecommendationBox";
 
@@ -16,15 +12,16 @@ interface ResultCardProps {
 }
 
 export default function ResultCard({ result, onReset }: ResultCardProps) {
+  const t = useTranslations("result");
   const colors = RISK_COLORS[result.risk_level] ?? RISK_COLORS.high;
 
   const approvedIcon =
-    result.decision === "PHÊ DUYỆT"
+    result.decision === "APPROVE"
       ? "✅"
-      : result.decision === "XEM XÉT"
+      : result.decision === "REVIEW"
         ? "🔍"
         : "❌";
-  const title = getApprovalTitle(result.decision);
+  const title = t(`decision.${result.decision}` as any);
 
   return (
     <div
@@ -47,7 +44,7 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
             color: colors.badge_text,
           }}
         >
-          {getRiskLabel(result.risk_level)}
+          {t(`riskLevel.${result.risk_level}` as any)}
         </span>
       </div>
 
@@ -60,7 +57,7 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
       {/* Info Cards */}
       <div className="mt-6 grid grid-cols-3 gap-3">
         <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-          <p className="text-xs text-slate-500">Approval Score</p>
+          <p className="text-xs text-slate-500">{t("approvalScore")}</p>
           <p
             className="mt-1 text-lg font-bold"
             style={{ color: colors.primary }}
@@ -69,23 +66,19 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
           </p>
         </div>
         <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-          <p className="text-xs text-slate-500">Kết quả</p>
+          <p className="text-xs text-slate-500">{t("resultLabel")}</p>
           <p className="mt-1 flex items-center justify-center gap-1 text-lg font-bold text-slate-900">
             <span>{approvedIcon}</span>
-            {getApprovalLabel(result.decision)}
+            {t(`decisionShort.${result.decision}` as any)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-          <p className="text-xs text-slate-500">Risk Level</p>
+          <p className="text-xs text-slate-500">{t("riskLevelLabel")}</p>
           <p
             className="mt-1 text-lg font-bold"
             style={{ color: colors.primary }}
           >
-            {result.risk_level === "low"
-              ? "Low"
-              : result.risk_level === "medium"
-                ? "Medium"
-                : "High"}
+            {t(`riskLevelShort.${result.risk_level}` as any)}
           </p>
         </div>
       </div>
@@ -105,7 +98,7 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
           className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:shadow-md"
         >
           <span>📋</span>
-          Nộp đơn mới
+          {t("newApplication")}
         </button>
       </div>
     </div>

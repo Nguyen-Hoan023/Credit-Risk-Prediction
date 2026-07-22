@@ -45,14 +45,20 @@ export interface CreditScoreRequest {
   education_level: string;
 }
 
+// Recommendation item from API
+export interface RecommendationItem {
+  code: string;
+  params: Record<string, string | number>;
+}
+
 // API Response - Ket qua tu backend
 export interface CreditScoreResponse {
   credit_score: number;
   approval_probability: number;
   risk_level: RiskLevel;
   approved: boolean;
-  decision: string;
-  recommendations: string[];
+  decision: string; // "APPROVE" | "REVIEW" | "REJECT"
+  recommendations: RecommendationItem[];
   probability_of_default?: number;
 }
 
@@ -69,11 +75,11 @@ export interface HistoryRecord {
   credit_score: number;
   risk_level: RiskLevel;
   approved: boolean;
-  decision: string;
+  decision: string; // "APPROVE" | "REVIEW" | "REJECT"
   
   // Cac truong bo sung de xem chi tiet (tuy chon de tuong thich voi du lieu cu)
   formData?: LoanFormData;
-  recommendations?: string[];
+  recommendations?: RecommendationItem[];
   probability_of_default?: number;
   approval_probability?: number;
 }

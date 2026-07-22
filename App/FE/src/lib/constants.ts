@@ -21,42 +21,8 @@ export function getRiskLevel(score: number): RiskLevel {
   return "low";
 }
 
-export function getRiskLabel(level: RiskLevel): string {
-  switch (level) {
-    case "low":
-      return "Rủi ro thấp";
-    case "medium":
-      return "Rủi ro trung bình";
-    case "high":
-      return "Rủi ro cao";
-  }
-}
-
-export function getApprovalLabel(decision: string): string {
-  switch (decision) {
-    case "PHÊ DUYỆT":
-      return "Approved";
-    case "XEM XÉT":
-      return "Review";
-    case "TỪ CHỐI":
-      return "Rejected";
-    default:
-      return decision;
-  }
-}
-
-export function getApprovalTitle(decision: string): string {
-  switch (decision) {
-    case "PHÊ DUYỆT":
-      return "Hồ sơ được PHÊ DUYỆT";
-    case "XEM XÉT":
-      return "Hồ sơ cần XEM XÉT";
-    case "TỪ CHỐI":
-      return "Hồ sơ bị TỪ CHỐI";
-    default:
-      return "Đánh giá hồ sơ";
-  }
-}
+// I18N: Decision codes returned by backend (standardized English codes)
+export type DecisionCode = "APPROVE" | "REVIEW" | "REJECT";
 
 // Color Scheme
 export const RISK_COLORS: Record<
@@ -100,47 +66,48 @@ export const RISK_COLORS: Record<
   },
 };
 
-// Form Select Options
+// Form Select Options — value-only (labels provided by i18n)
+// Each option has: value (sent to API) + labelKey (used by t() for translation)
 export const LOAN_TERM_OPTIONS = [
-  { value: 12, label: "12 tháng (1 năm)" },
-  { value: 24, label: "24 tháng (2 năm)" },
-  { value: 36, label: "36 tháng (3 năm)" },
-  { value: 60, label: "60 tháng (5 năm)" },
+  { value: 12, labelKey: "options.loanTerm.12" },
+  { value: 24, labelKey: "options.loanTerm.24" },
+  { value: 36, labelKey: "options.loanTerm.36" },
+  { value: 60, labelKey: "options.loanTerm.60" },
 ];
 
 export const HOME_OWNERSHIP_OPTIONS = [
-  { value: "RENT", label: "Thuê (Rent)" },
-  { value: "OWN", label: "Sở hữu (Own)" },
-  { value: "MORTGAGE", label: "Thế chấp (Mortgage)" },
-  { value: "OTHER", label: "Khác (Other)" },
+  { value: "RENT", labelKey: "options.homeOwnership.RENT" },
+  { value: "OWN", labelKey: "options.homeOwnership.OWN" },
+  { value: "MORTGAGE", labelKey: "options.homeOwnership.MORTGAGE" },
+  { value: "OTHER", labelKey: "options.homeOwnership.OTHER" },
 ];
 
 export const LOAN_INTENT_OPTIONS = [
-  { value: "PERSONAL", label: "Cá nhân (Personal)" },
-  { value: "MEDICAL", label: "Y tế (Medical)" },
-  { value: "EDUCATION", label: "Giáo dục (Education)" },
-  { value: "VENTURE", label: "Kinh doanh (Venture)" },
-  { value: "HOMEIMPROVEMENT", label: "Sửa nhà (Home Improvement)" },
-  { value: "DEBTCONSOLIDATION", label: "Hợp nhất nợ (Debt Consolidation)" },
+  { value: "PERSONAL", labelKey: "options.loanIntent.PERSONAL" },
+  { value: "MEDICAL", labelKey: "options.loanIntent.MEDICAL" },
+  { value: "EDUCATION", labelKey: "options.loanIntent.EDUCATION" },
+  { value: "VENTURE", labelKey: "options.loanIntent.VENTURE" },
+  { value: "HOMEIMPROVEMENT", labelKey: "options.loanIntent.HOMEIMPROVEMENT" },
+  { value: "DEBTCONSOLIDATION", labelKey: "options.loanIntent.DEBTCONSOLIDATION" },
 ];
 
 export const EMPLOYMENT_TYPE_OPTIONS = [
-  { value: "Full-time", label: "Toàn thời gian (Full-time)" },
-  { value: "Part-time", label: "Bán thời gian (Part-time)" },
-  { value: "Self-employed", label: "Tự kinh doanh (Self-employed)" },
-  { value: "Unemployed", label: "Thất nghiệp (Unemployed)" },
+  { value: "Full-time", labelKey: "options.employmentType.fullTime" },
+  { value: "Part-time", labelKey: "options.employmentType.partTime" },
+  { value: "Self-employed", labelKey: "options.employmentType.selfEmployed" },
+  { value: "Unemployed", labelKey: "options.employmentType.unemployed" },
 ];
 
 export const EDUCATION_LEVEL_OPTIONS = [
-  { value: "High School", label: "Trung học (High School)" },
-  { value: "Bachelor", label: "Đại học (Bachelor)" },
-  { value: "Master", label: "Thạc sĩ (Master)" },
-  { value: "PhD", label: "Tiến sĩ (PhD)" },
+  { value: "High School", labelKey: "options.educationLevel.highSchool" },
+  { value: "Bachelor", labelKey: "options.educationLevel.bachelor" },
+  { value: "Master", labelKey: "options.educationLevel.master" },
+  { value: "PhD", labelKey: "options.educationLevel.phd" },
 ];
 
 export const DEFAULT_ON_FILE_OPTIONS = [
-  { value: "N", label: "Không (No)" },
-  { value: "Y", label: "Có (Yes)" },
+  { value: "N", labelKey: "options.defaultOnFile.no" },
+  { value: "Y", labelKey: "options.defaultOnFile.yes" },
 ];
 
 // API Config

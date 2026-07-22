@@ -5,7 +5,7 @@ Sai kieu du lieu hoac thieu field -> tra loi 422 ngay, khong vao den model.
 """
 
 from pydantic import BaseModel, Field, model_validator
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 
 
@@ -61,9 +61,9 @@ class PredictResponse(BaseModel):
     approval_probability: float = Field(..., description="Kha nang duoc phe duyet (%)")
     probability_of_default: float = Field(..., description="Xac suat vo no (0.0-1.0)")
     risk_level: str = Field(..., description="Muc rui ro: low / medium / high")
-    decision: str = Field(..., description="Quyet dinh: TU CHOI / XEM XET / PHE DUYET")
+    decision: str = Field(..., description="Quyet dinh: REJECT / REVIEW / APPROVE")
     approved: bool = Field(..., description="True neu duoc phe duyet")
-    recommendations: List[str] = Field(..., description="Danh sach khuyen nghi")
+    recommendations: List[Dict[str, Any]] = Field(..., description="Danh sach khuyen nghi [{code, params}]")
 
 
 # Health Check Response
@@ -103,7 +103,7 @@ class HistoryItem(BaseModel):
     credit_score: int
     risk_tier: str
     decision: str
-    top_reasons: Optional[List[str]] = None
+    top_reasons: Optional[List[Any]] = None
 
     class Config:
         from_attributes = True

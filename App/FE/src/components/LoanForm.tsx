@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { LoanFormData } from "@/lib/types";
 import {
   LOAN_TERM_OPTIONS,
@@ -108,6 +109,7 @@ function SelectField({
   options,
   value,
   onChange,
+  placeholder,
 }: {
   id: string;
   label: string;
@@ -115,6 +117,7 @@ function SelectField({
   options: { value: string | number; label: string }[];
   value: string | number;
   onChange: (val: string) => void;
+  placeholder?: string;
 }) {
   return (
     <div>
@@ -131,7 +134,7 @@ function SelectField({
         required
         className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-all duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
       >
-        <option value="" disabled hidden>-- Chọn --</option>
+        <option value="" disabled hidden>{placeholder || "-- Select --"}</option>
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
@@ -145,6 +148,9 @@ function SelectField({
 // Main Form
 
 export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
+  const t = useTranslations("form");
+  const tOpt = useTranslations("options");
+
   // State cho tất cả các field
   const [personAge, setPersonAge] = useState("");
   const [personIncome, setPersonIncome] = useState("");
@@ -170,6 +176,14 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
   const [empLengthError, setEmpLengthError] = useState("");
   const [credHistError, setCredHistError] = useState("");
 
+  // Helper: translate labelKey to label using tOpt
+  const translateOptions = (options: { value: string | number; labelKey: string }[]) => {
+    return options.map((opt) => ({
+      value: opt.value,
+      label: tOpt(opt.labelKey.replace("options.", "") as any),
+    }));
+  };
+
   useEffect(() => {
     const age = Number(personAge);
     const emp = personEmpLength === "" ? null : Number(personEmpLength);
@@ -178,7 +192,7 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
     if (age && emp !== null) {
       const maxEmp = age - 14;
       if (emp > maxEmp) {
-        setEmpLengthError("Số năm làm việc không hợp lệ");
+        setEmpLengthError(t("empLengthError"));
       } else {
         setEmpLengthError("");
       }
@@ -189,26 +203,26 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
     if (age && cred !== null) {
       const maxCred = age - 18;
       if (cred > maxCred) {
-        setCredHistError("Số năm sử dụng tín dụng không hợp lệ");
+        setCredHistError(t("credHistError"));
       } else {
         setCredHistError("");
       }
     } else {
       setCredHistError("");
     }
-  }, [personAge, personEmpLength, credHistLength]);
+  }, [personAge, personEmpLength, credHistLength, t]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     if (empLengthError) {
-      alert("Số năm làm việc không hợp lệ");
+      alert(t("empLengthError"));
       document.getElementById("person_emp_length")?.focus();
       return;
     }
 
     if (credHistError) {
-      alert("Số năm sử dụng tín dụng không hợp lệ");
+      alert(t("credHistError"));
       document.getElementById("cb_person_cred_hist_length")?.focus();
       return;
     }
@@ -245,176 +259,182 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* 1. Thông tin cá nhân */}
-      <FormSection title="Thông tin cá nhân" icon="👤">
+      <FormSection title={t("personalInfo")} icon="👤">
         <InputField
           id="person_age"
-          label="Tuổi"
+          label={t("age")}
           icon=""
-          hint="Từ 18 đến 80 tuổi"
+          hint={t("ageHint")}
           value={personAge}
           onChange={setPersonAge}
           min="18"
           max="80"
-          placeholder="VD: 35"
+          placeholder={t("agePlaceholder")}
         />
         <InputField
           id="person_income"
-          label="Thu nhập hàng năm (USD)"
+          label={t("income")}
           icon=""
-          hint="Thu nhập trước thuế"
+          hint={t("incomeHint")}
           value={personIncome}
           onChange={setPersonIncome}
           min="0"
-          placeholder="VD: 75000"
+          placeholder={t("incomePlaceholder")}
         />
         <InputField
           id="person_emp_length"
-          label="Số năm làm việc"
+          label={t("empLength")}
           icon=""
-          hint="Để trống nếu không có"
+          hint={t("empLengthHint")}
           value={personEmpLength}
           onChange={setPersonEmpLength}
           required={false}
           min="0"
           max="60"
-          placeholder="VD: 8"
+          placeholder={t("empLengthPlaceholder")}
           error={empLengthError}
         />
         <SelectField
           id="education_level"
-          label="Trình độ học vấn"
+          label={t("educationLevel")}
           icon=""
-          options={EDUCATION_LEVEL_OPTIONS}
+          options={translateOptions(EDUCATION_LEVEL_OPTIONS)}
           value={educationLevel}
           onChange={setEducationLevel}
+          placeholder={t("selectPlaceholder")}
         />
         <SelectField
           id="employment_type"
-          label="Loại hình công việc"
+          label={t("employmentType")}
           icon=""
-          options={EMPLOYMENT_TYPE_OPTIONS}
+          options={translateOptions(EMPLOYMENT_TYPE_OPTIONS)}
           value={employmentType}
           onChange={setEmploymentType}
+          placeholder={t("selectPlaceholder")}
         />
         <SelectField
           id="person_home_ownership"
-          label="Tình trạng nhà ở"
+          label={t("homeOwnership")}
           icon=""
-          options={HOME_OWNERSHIP_OPTIONS}
+          options={translateOptions(HOME_OWNERSHIP_OPTIONS)}
           value={homeOwnership}
           onChange={setHomeOwnership}
+          placeholder={t("selectPlaceholder")}
         />
       </FormSection>
 
       {/* 2. Thông tin khoản vay */}
-      <FormSection title="Thông tin khoản vay" icon="💳">
+      <FormSection title={t("loanInfo")} icon="💳">
         <InputField
           id="loan_amnt"
-          label="Số tiền muốn vay (USD)"
+          label={t("loanAmount")}
           icon=""
-          hint="Số tiền cần vay"
+          hint={t("loanAmountHint")}
           value={loanAmnt}
           onChange={setLoanAmnt}
           min="0"
-          placeholder="VD: 25000"
+          placeholder={t("loanAmountPlaceholder")}
         />
         <SelectField
           id="loan_term_months"
-          label="Thời hạn vay"
+          label={t("loanTerm")}
           icon=""
-          options={LOAN_TERM_OPTIONS}
+          options={translateOptions(LOAN_TERM_OPTIONS)}
           value={loanTermMonths}
           onChange={setLoanTermMonths}
+          placeholder={t("selectPlaceholder")}
         />
         <InputField
           id="loan_int_rate"
-          label="Lãi suất (%)"
+          label={t("loanIntRate")}
           icon=""
-          hint="Để trống nếu chưa biết"
+          hint={t("loanIntRateHint")}
           value={loanIntRate}
           onChange={setLoanIntRate}
           required={false}
           step="0.01"
           min="0"
           max="40"
-          placeholder="VD: 11.5"
+          placeholder={t("loanIntRatePlaceholder")}
         />
         <SelectField
           id="loan_intent"
-          label="Mục đích vay"
+          label={t("loanIntent")}
           icon=""
-          options={LOAN_INTENT_OPTIONS}
+          options={translateOptions(LOAN_INTENT_OPTIONS)}
           value={loanIntent}
           onChange={setLoanIntent}
+          placeholder={t("selectPlaceholder")}
         />
       </FormSection>
 
       {/* 3. Lịch sử tín dụng */}
-      <FormSection title="Lịch sử tín dụng" icon="📋">
+      <FormSection title={t("creditHistory")} icon="📋">
         <InputField
           id="cb_person_cred_hist_length"
-          label="Lịch sử tín dụng (năm)"
+          label={t("credHistLength")}
           icon=""
-          hint="Số năm có lịch sử tín dụng"
+          hint={t("credHistLengthHint")}
           value={credHistLength}
           onChange={setCredHistLength}
           min="0"
-          placeholder="VD: 12"
+          placeholder={t("credHistLengthPlaceholder")}
           error={credHistError}
         />
         <InputField
           id="open_accounts"
-          label="Số tài khoản tín dụng"
+          label={t("openAccounts")}
           icon=""
-          hint="Thẻ tín dụng, khoản vay đang có"
+          hint={t("openAccountsHint")}
           value={openAccounts}
           onChange={setOpenAccounts}
           min="0"
-          placeholder="VD: 4"
+          placeholder={t("openAccountsPlaceholder")}
         />
         <InputField
           id="past_delinquencies"
-          label="Số lần trễ hạn"
+          label={t("pastDelinquencies")}
           icon=""
-          hint="Số lần trễ hạn thanh toán"
+          hint={t("pastDelinquenciesHint")}
           value={pastDelinquencies}
           onChange={setPastDelinquencies}
           min="0"
-          placeholder="VD: 0"
+          placeholder={t("pastDelinquenciesPlaceholder")}
         />
         <SelectField
           id="cb_person_default_on_file"
-          label="Có tiền sử vỡ nợ?"
+          label={t("defaultOnFile")}
           icon=""
-          options={DEFAULT_ON_FILE_OPTIONS}
+          options={translateOptions(DEFAULT_ON_FILE_OPTIONS)}
           value={defaultOnFile}
           onChange={setDefaultOnFile}
+          placeholder={t("selectPlaceholder")}
         />
         <InputField
           id="credit_utilization_ratio"
-          label="Tỷ lệ sử dụng tín dụng"
+          label={t("creditUtilization")}
           icon=""
-          hint="0.0 = không sử dụng, 1.0 = hết hạn mức"
+          hint={t("creditUtilizationHint")}
           value={creditUtilization}
           onChange={setCreditUtilization}
           step="0.01"
           min="0"
           max="1"
-          placeholder="VD: 0.28"
+          placeholder={t("creditUtilizationPlaceholder")}
         />
       </FormSection>
 
       {/* 4. Nợ khác */}
-      <FormSection title="Tài chính khác" icon="💰">
+      <FormSection title={t("otherFinance")} icon="💰">
         <InputField
           id="other_debt"
-          label="Nợ khác (USD)"
+          label={t("otherDebt")}
           icon=""
-          hint="Các khoản nợ khác đang có"
+          hint={t("otherDebtHint")}
           value={otherDebt}
           onChange={setOtherDebt}
           min="0"
-          placeholder="VD: 5000"
+          placeholder={t("otherDebtPlaceholder")}
         />
       </FormSection>
 
@@ -446,12 +466,12 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Đang đánh giá...
+              {t("submitting")}
             </>
           ) : (
             <>
               <span></span>
-              Gửi đánh giá
+              {t("submit")}
             </>
           )}
         </button>
