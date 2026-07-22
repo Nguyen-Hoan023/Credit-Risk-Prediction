@@ -26,10 +26,8 @@ Dự án được thiết kế theo mô hình client-server tách biệt:
 ### 1. Cấu Hình & Chạy Backend (FastAPI)
 
 1. Mở Terminal mới và di chuyển vào thư mục Backend:
-   ```bash
    cd App/BE
-   ```
-
+   
 2. Kích hoạt môi trường ảo (Virtual Environment):
    * Trên **PowerShell**:
      ```powershell
