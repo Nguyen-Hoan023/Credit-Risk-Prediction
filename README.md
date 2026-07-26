@@ -1,5 +1,7 @@
 # NovaBank CreditRisk — Hệ Thống Đánh Giá Rủi Ro Tín Dụng
 
+> 🌐 **Live Demo (Vercel)**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)
+
 NovaBank CreditRisk là hệ thống hỗ trợ chuyên viên ngân hàng đánh giá và phê duyệt hồ sơ vay vốn theo thời gian thực. Hệ thống tích hợp mô hình học máy **LightGBM** (được huấn luyện và tối ưu hóa siêu tham số trên dữ liệu thực tế) để dự báo xác suất vỡ nợ (Probability of Default — PD), quy đổi sang thang điểm tín dụng chuẩn hóa theo công thức Log-Odds (tương tự FICO Score 300–850), áp dụng các quy tắc nghiệp vụ ngân hàng và đưa ra quyết định phê duyệt tự động kèm khuyến nghị chi tiết.
 
 ---
@@ -253,10 +255,9 @@ Giao diện hỗ trợ chuyển đổi linh hoạt giữa **Tiếng Việt** và
 
 ### Dữ liệu huấn luyện
 
-- Nguồn: Dataset tín dụng thực tế (~45,000 bản ghi)
+- Nguồn: Dataset tín dụng thực tế 
 - File gốc: `raw_data/Credit Risk Data.csv`
 - Biến mục tiêu: `loan_status` (0 = Không vỡ nợ, 1 = Vỡ nợ)
-- Tỷ lệ mất cân bằng lớp được xử lý bằng **SMOTE** (xem `notebooks/testsmote.ipynb`)
 
 ### Pipeline mô hình
 
@@ -270,14 +271,7 @@ Raw Input (16 features)
 
 ### Thang điểm tín dụng (Log-Odds)
 
-Công thức chuẩn hóa tương tự FICO Score:
-
-```
-factor = PDO / ln(2)         [PDO = 20]
-odds   = (1 - PD) / PD
-score  = BASE_SCORE + factor x ln(odds)    [BASE_SCORE = 600]
-score  = clip(score, 300, 850)
-```
+Công thức chuẩn hóa tương tự FICO Score: từ 300-850 điểm 
 
 ### Ngưỡng phân loại (từ `artifacts/metadata.json`)
 
@@ -320,7 +314,6 @@ Sau khi khởi chạy backend, tài liệu API đầy đủ có tại `http://12
 | npm | 9+ | Đi kèm Node.js |
 | PostgreSQL | 14+ | Có thể dùng local hoặc cloud (Supabase, Render) |
 
-Xem toàn bộ danh sách thư viện Python cần cài đặt trong file **[requirements.txt](./requirements.txt)** ở thư mục gốc.
 
 ```bash
 # Cài đặt toàn bộ thư viện Python (Backend + ML + Notebooks)
