@@ -115,7 +115,7 @@
     }
   },
   "result": {
-    "approvalScore": "Tỷ lệ duyệt",
+    "approvalScore": "Tỷ lệ phê duyệt",
     "resultLabel": "Kết quả",
     "riskLevelLabel": "Mức rủi ro",
     "newApplication": "Nộp đơn mới",
@@ -126,7 +126,7 @@
       "REJECT": "Hồ sơ bị TỪ CHỐI"
     },
     "decisionShort": {
-      "APPROVE": "Đã duyệt",
+      "APPROVE": "Phê duyệt",
       "REVIEW": "Xem xét",
       "REJECT": "Từ chối"
     },
@@ -155,6 +155,9 @@
     "OWNER_HAS_COLLATERAL": "Khách hàng có tài sản đảm bảo. Khuyến nghị ưu tiên phê duyệt nhanh hoặc áp dụng chính sách ưu đãi hạn mức.",
     "RISKY_LOAN_PURPOSE": "Mục đích sử dụng có rủi ro, cần kiểm soát chặt chẽ (Cơ cấu nợ/Sửa nhà/Y tế). Yêu cầu bổ sung chứng từ chứng minh phương án sử dụng vốn.",
     "GOOD_LOAN_PURPOSE": "Mục đích sử dụng tốt và có tạo ra lợi nhuận. Khuyến nghị hỗ trợ áp dụng các gói lãi suất ưu đãi và tối ưu hóa thời gian xử lý hồ sơ.",
+    "HIGH_INCOME_FLAG": "Thu nhập khai báo của khách hàng rất cao, cần xem xét cẩn thận hơn!",
+    "HIGH_LOAN_AMOUNT_FLAG": "Khoản vay yêu cầu của khách hàng khá cao, cần xem xét cẩn thận hơn!",
+    "HIGH_OTHER_DEBT_FLAG": "Nợ ngoài hệ thống của khách hàng khá cao, cần xem xét cẩn thận hơn!",
     "LEGACY_TEXT": "{text}"
   },
   "history": {

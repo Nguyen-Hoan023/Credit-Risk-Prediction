@@ -15,12 +15,6 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
   const t = useTranslations("result");
   const colors = RISK_COLORS[result.risk_level] ?? RISK_COLORS.high;
 
-  const approvedIcon =
-    result.decision === "APPROVE"
-      ? "✅"
-      : result.decision === "REVIEW"
-        ? "🔍"
-        : "❌";
   const title = t(`decision.${result.decision}` as any);
 
   return (
@@ -33,8 +27,7 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
     >
       {/* Header */}
       <div className="mb-6 text-center">
-        <h2 className="flex items-center justify-center gap-2 text-xl font-extrabold text-slate-900 sm:text-2xl">
-          <span>{approvedIcon}</span>
+        <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
           {title}
         </h2>
         <span
@@ -67,8 +60,7 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
         </div>
         <div className="rounded-xl bg-white p-3 text-center shadow-sm">
           <p className="text-xs text-slate-500">{t("resultLabel")}</p>
-          <p className="mt-1 flex items-center justify-center gap-1 text-lg font-bold text-slate-900">
-            <span>{approvedIcon}</span>
+          <p className="mt-1 text-lg font-bold text-slate-900">
             {t(`decisionShort.${result.decision}` as any)}
           </p>
         </div>

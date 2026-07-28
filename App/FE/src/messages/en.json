@@ -155,6 +155,9 @@
     "OWNER_HAS_COLLATERAL": "Applicant owns property as collateral. Recommend fast-track approval or preferential credit limit policies.",
     "RISKY_LOAN_PURPOSE": "Loan purpose carries higher risk (Debt Consolidation/Home Improvement/Medical). Request supporting documents for fund usage plan.",
     "GOOD_LOAN_PURPOSE": "Loan purpose is productive and revenue-generating. Recommend offering preferential interest rate packages.",
+    "HIGH_INCOME_FLAG": "Applicant's income is notably high ({value} USD), requiring closer scrutiny! Please request supporting documents to verify income source (bank statements, employment contract).",
+    "HIGH_LOAN_AMOUNT_FLAG": "Requested loan amount is notably high ({value} USD), requiring closer scrutiny! A credit officer must thoroughly verify the intended use of funds and repayment plan.",
+    "HIGH_OTHER_DEBT_FLAG": "Applicant's external debt is notably high ({value} USD), requiring closer scrutiny! A CIC credit report check is required to assess monthly cash flow pressure before extending new credit.",
     "LEGACY_TEXT": "{text}"
   },
   "history": {

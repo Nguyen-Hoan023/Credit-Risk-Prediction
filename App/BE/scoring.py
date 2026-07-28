@@ -178,6 +178,26 @@ def generate_recommendations(
                 "params": {}
             })
 
+    # Canh bao ngoai lai (Outlier Flags) - Dua tren phan tich EDA (IQR Upper Bound)
+    # Nguong: person_income > 150k, loan_amnt > 25k, other_debt > 30k
+    if person_income > 150000:
+        recs.append({
+            "code": "HIGH_INCOME_FLAG",
+            "params": {"value": f"{person_income:,.0f}"}
+        })
+
+    if loan_amnt > 25000:
+        recs.append({
+            "code": "HIGH_LOAN_AMOUNT_FLAG",
+            "params": {"value": f"{loan_amnt:,.0f}"}
+        })
+
+    if other_debt > 30000:
+        recs.append({
+            "code": "HIGH_OTHER_DEBT_FLAG",
+            "params": {"value": f"{other_debt:,.0f}"}
+        })
+
     return recs
 
 

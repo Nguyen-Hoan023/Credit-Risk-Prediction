@@ -451,7 +451,7 @@ export default function HistoryPage() {
                     <span className="text-3xl font-black text-indigo-600">
                       {selectedRecord.approval_probability !== undefined ? `${selectedRecord.approval_probability}%` : "N/A"}
                     </span>
-                    <span className="block text-xs font-semibold text-slate-400">PD: {selectedRecord.probability_of_default !== undefined ? `${(selectedRecord.probability_of_default * 100).toFixed(2)}%` : "N/A"}</span>
+
                   </div>
                   <div className="text-center py-2">
                     <span className="block text-xs font-semibold text-slate-500 uppercase">{t("creditDecision")}</span>
