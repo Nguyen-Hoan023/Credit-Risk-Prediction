@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from core.dependencies import require_admin
 from database.connection import get_db
-from domain.user.schema import UserResponse, AdminCreateUserRequest, UserListResponse
+from domain.user.schema import UserResponse, AdminCreateUserRequest, UserListResponse, AdminUpdateUserStatusRequest
 from domain.user.model import User
 from domain.user.enums import UserStatus
 from domain.prediction.model import Prediction
@@ -46,6 +46,22 @@ async def create_user(
     db.commit()
     db.refresh(new_user)
     return new_user
+
+@router.patch("/users/{user_id}/status", response_model=UserResponse, summary="Admin cập nhật trạng thái nhân viên")
+async def update_user_status(
+    user_id: int,
+    data: AdminUpdateUserStatusRequest,
+    admin=Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
+    
+    user.status = data.status
+    db.commit()
+    db.refresh(user)
+    return user
 
 @router.get("/stats", summary="Thống kê hệ thống cho Dashboard")
 async def get_dashboard_stats(

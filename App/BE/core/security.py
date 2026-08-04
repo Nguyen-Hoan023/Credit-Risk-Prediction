@@ -6,24 +6,26 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
+import bcrypt as _bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from core.config import settings
-
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # ── Password helpers ──────────────────────────────────────────────────────────
 
 def hash_password(plain: str) -> str:
     """Hash a plain-text password with bcrypt."""
-    return _pwd_context.hash(plain)
+    salt = _bcrypt.gensalt()
+    return _bcrypt.hashpw(plain.encode("utf-8"), salt).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Return True if plain matches the bcrypt hash."""
-    return _pwd_context.verify(plain, hashed)
+    try:
+        return _bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
 
 
 # ── OTP ───────────────────────────────────────────────────────────────────────

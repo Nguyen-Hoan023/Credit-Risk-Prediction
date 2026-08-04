@@ -104,3 +104,6 @@ class AdminCreateUserRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
     role: UserRole = UserRole.STAFF
+
+class AdminUpdateUserStatusRequest(BaseModel):
+    status: UserStatus

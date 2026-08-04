@@ -52,6 +52,29 @@ export default function AdminUsers() {
     }
   };
 
+  const handleUpdateStatus = async (userId: number, newStatus: string) => {
+    try {
+      const token = getAccessToken();
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        fetchUsers();
+        alert("Cập nhật trạng thái thành công!");
+      } else {
+        const error = await res.json();
+        alert(`Lỗi: ${error.detail}`);
+      }
+    } catch (err) {
+      alert("Đã xảy ra lỗi hệ thống.");
+    }
+  };
+
   return (
     <div className="p-8 relative h-full">
       <div className="flex justify-between items-center mb-6">
@@ -87,9 +110,23 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {user.status.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.status === 'active' ? 'bg-green-100 text-green-700' :
+                      user.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {user.status.toUpperCase()}
+                    </span>
+                    {user.status === 'pending' && (
+                      <button
+                        onClick={() => handleUpdateStatus(user.id, 'active')}
+                        className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md border border-blue-200 transition-colors font-medium"
+                      >
+                        Kích hoạt
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <td className="p-4 text-gray-500 text-sm">
                   {new Date(user.created_at).toLocaleDateString("vi-VN")}
