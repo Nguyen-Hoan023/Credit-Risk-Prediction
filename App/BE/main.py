@@ -106,10 +106,17 @@ app = FastAPI(
 )
 
 # CORS
-_origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
+cors_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        "https://credit-risk-prediction-pi.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
