@@ -82,4 +82,8 @@ export interface HistoryRecord {
   recommendations?: RecommendationItem[];
   probability_of_default?: number;
   approval_probability?: number;
+  user?: {
+    full_name: string;
+    email: string;
+  };
 }

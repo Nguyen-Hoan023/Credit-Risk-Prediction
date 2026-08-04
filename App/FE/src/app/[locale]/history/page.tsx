@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { HistoryRecord, RiskLevel, RecommendationItem } from "@/lib/types";
 import { RISK_COLORS } from "@/lib/constants";
-import { fetchCreditHistory, clearCreditHistory } from "@/lib/api";
+import { fetchCreditHistory } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth";
+import HistoryDetailModal from "@/components/HistoryDetailModal";
 
 export default function HistoryPage() {
+  const router = useRouter();
+  const [isAuth, setIsAuth] = useState<boolean | null>(null);
+
   const t = useTranslations("history");
   const tResult = useTranslations("result");
   const tRec = useTranslations("recommendations");
@@ -28,20 +33,17 @@ export default function HistoryPage() {
 
   // Load history on mount
   useEffect(() => {
+    const authStatus = isAuthenticated();
+    setIsAuth(authStatus);
+    if (!authStatus) return;
+
     async function loadHistory() {
       try {
         const dbHistory = await fetchCreditHistory();
         setHistory(dbHistory);
       } catch (dbError) {
-        console.warn("Could not load history from PostgreSQL, falling back to localStorage:", dbError);
-        try {
-          const historyJson = localStorage.getItem("novabank_credit_history");
-          if (historyJson) {
-            setHistory(JSON.parse(historyJson));
-          }
-        } catch (localError) {
-          console.error("Failed to load local history:", localError);
-        }
+        console.warn("Could not load history from PostgreSQL:", dbError);
+        setHistory([]);
       } finally {
         setIsLoaded(true);
       }
@@ -70,27 +72,7 @@ export default function HistoryPage() {
     setCurrentPage(1);
   }, [history, riskFilter, statusFilter]);
 
-  // Clear history
-  const handleClearHistory = async () => {
-    const key = window.prompt(
-      t("clearConfirm") + "\n\n(Nhập Admin API Key nếu hệ thống có bật bảo mật, hoặc nhấn OK để tiếp tục):",
-      ""
-    );
-    if (key !== null) {
-      try {
-        try {
-          await clearCreditHistory(key);
-        } catch (dbError: any) {
-          alert(`Không thể xóa dữ liệu trên Server: ${dbError.message || dbError}`);
-          return;
-        }
-        localStorage.removeItem("novabank_credit_history");
-        setHistory([]);
-      } catch (e) {
-        console.error("Failed to clear history:", e);
-      }
-    }
-  };
+
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
@@ -168,6 +150,26 @@ export default function HistoryPage() {
     catch { return intent; }
   };
 
+  if (isAuth === null) return null;
+
+  if (!isAuth) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center mt-10">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <span className="text-5xl">🔒</span>
+          <h2 className="mt-4 text-xl font-bold text-slate-900">Yêu cầu đăng nhập</h2>
+          <p className="mt-2 text-slate-600">Bạn vui lòng đăng nhập để xem và sử dụng tính năng này.</p>
+          <button
+            onClick={() => router.push("/login")}
+            className="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+          >
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoaded) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 text-center">
@@ -190,14 +192,7 @@ export default function HistoryPage() {
           </p>
         </div>
 
-        {history.length > 0 && (
-          <button
-            onClick={handleClearHistory}
-            className="self-start rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
-          >
-            {t("clearHistory")}
-          </button>
-        )}
+
       </div>
 
       {history.length === 0 ? (
@@ -420,142 +415,7 @@ export default function HistoryPage() {
 
       {/* Detail Modal */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">{t("modalTitle")}</h3>
-                <p className="text-xs text-slate-500 mt-0.5">{t("modalId")}: #{selectedRecord.id} • {t("modalTime")}: {formatDate(selectedRecord.created_at)}</p>
-              </div>
-              <button
-                onClick={() => setSelectedRecord(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-              >
-                <span className="text-xl">✕</span>
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            {selectedRecord.formData ? (
-              <div className="mt-6 space-y-6">
-                {/* 1. Điểm tín dụng và Quyết định */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 rounded-xl bg-slate-50 p-4 border border-slate-100">
-                  <div className="text-center sm:border-r border-slate-200 py-2">
-                    <span className="block text-xs font-semibold text-slate-500 uppercase">{t("creditScore")}</span>
-                    <span className="text-3xl font-black text-slate-900">{selectedRecord.credit_score}</span>
-                    <span className="block text-xs font-semibold text-slate-400">{t("scoreRange")}</span>
-                  </div>
-                  <div className="text-center sm:border-r border-slate-200 py-2">
-                    <span className="block text-xs font-semibold text-slate-500 uppercase">{t("approvalProbability")}</span>
-                    <span className="text-3xl font-black text-indigo-600">
-                      {selectedRecord.approval_probability !== undefined ? `${selectedRecord.approval_probability}%` : "N/A"}
-                    </span>
-
-                  </div>
-                  <div className="text-center py-2">
-                    <span className="block text-xs font-semibold text-slate-500 uppercase">{t("creditDecision")}</span>
-                    <div className="mt-1">
-                      {(() => {
-                        const decision = selectedRecord.decision;
-                        if (decision === "APPROVE") {
-                          return <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{tResult("decisionShort.APPROVE")}</span>;
-                        } else if (decision === "REVIEW") {
-                          return <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20">{tResult("decisionShort.REVIEW")}</span>;
-                        } else {
-                          return <span className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-700 ring-1 ring-inset ring-red-600/20">{tResult("decisionShort.REJECT")}</span>;
-                        }
-                      })()}
-                    </div>
-                    <span className="block text-xs font-semibold text-slate-400 mt-1">{t("riskDegree")}: {tResult(`riskLevel.${selectedRecord.risk_level}` as any)}</span>
-                  </div>
-                </div>
-
-                {/* 2. Các thông tin chi tiết */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  {/* Thông tin cá nhân */}
-                  <div>
-                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1">👤 {t("personalInfo")}</h4>
-                    <ul className="space-y-1.5 text-xs">
-                      <li><span className="text-slate-500">{t("colAge")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.person_age} {t("ageUnit")}</span></li>
-                      <li><span className="text-slate-500">{t("yearlyIncome")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.person_income)}</span></li>
-                      <li><span className="text-slate-500">{t("empYears")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.person_emp_length !== null ? `${selectedRecord.formData.person_emp_length} ${t("yearUnit")}` : t("notAvailable")}</span></li>
-                      <li><span className="text-slate-500">{t("educationLevel")}:</span> <span className="font-semibold text-slate-900">{getEducationLevelLabel(selectedRecord.formData.education_level)}</span></li>
-                      <li><span className="text-slate-500">{t("employmentType")}:</span> <span className="font-semibold text-slate-900">{getEmploymentTypeLabel(selectedRecord.formData.employment_type)}</span></li>
-                      <li><span className="text-slate-500">{t("homeOwnership")}:</span> <span className="font-semibold text-slate-900">{getHomeOwnershipLabel(selectedRecord.formData.person_home_ownership)}</span></li>
-                    </ul>
-                  </div>
-
-                  {/* Thông tin khoản vay */}
-                  <div>
-                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1">{t("loanProposal")}</h4>
-                    <ul className="space-y-1.5 text-xs">
-                      <li><span className="text-slate-500">{t("loanAmount")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.loan_amnt)}</span></li>
-                      <li><span className="text-slate-500">{t("interestRate")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.loan_int_rate !== null ? `${selectedRecord.formData.loan_int_rate}%` : t("notDetermined")}</span></li>
-                      <li><span className="text-slate-500">{t("loanTerm")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.loan_term_months} {t("monthUnit")}</span></li>
-                      <li><span className="text-slate-500">{t("loanPurpose")}:</span> <span className="font-semibold text-slate-900">{getLoanIntentLabel(selectedRecord.formData.loan_intent)}</span></li>
-                    </ul>
-                  </div>
-
-                  {/* Lịch sử tín dụng và nợ */}
-                  <div>
-                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1"> {t("historyDebt")}</h4>
-                    <ul className="space-y-1.5 text-xs">
-                      <li><span className="text-slate-500">{t("creditHistoryYears")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.cb_person_cred_hist_length} {t("yearUnit")}</span></li>
-                      <li><span className="text-slate-500">{t("creditAccounts")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.open_accounts} {t("accountUnit")}</span></li>
-                      <li><span className="text-slate-500">{t("latePayments")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.past_delinquencies} {t("timeUnit")}</span></li>
-                      <li><span className="text-slate-500">{t("priorDefault")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.cb_person_default_on_file === "Y" ? t("yes") : t("no")}</span></li>
-                      <li><span className="text-slate-500">{t("creditUtilization")}:</span> <span className="font-semibold text-slate-900">{(selectedRecord.formData.credit_utilization_ratio * 100).toFixed(0)}%</span></li>
-                      <li><span className="text-slate-500">{t("otherDebt")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.formData.other_debt)}</span></li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* 3. Khuyến nghị chi tiết */}
-                {selectedRecord.recommendations && selectedRecord.recommendations.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1">{t("recommendationsTitle")}</h4>
-                    <ul className="list-inside list-disc space-y-1 text-xs text-slate-700 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
-                      {selectedRecord.recommendations.map((rec, i) => (
-                        <li key={i}>{translateRecommendation(rec)}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Trường hợp dữ liệu cũ */
-              <div className="mt-6 space-y-4">
-                <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-700 border border-amber-200">
-                  <strong>{t("legacyInfo")}:</strong> {t("legacyNotice")}
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
-                  <div><span className="text-slate-500">{t("legacyAge")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.person_age} {t("ageUnit")}</span></div>
-                  <div><span className="text-slate-500">{t("legacyIncome")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.person_income)}</span></div>
-                  <div><span className="text-slate-500">{t("legacyLoan")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.loan_amnt)}</span></div>
-                  <div><span className="text-slate-500">{t("legacyCreditScore")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.credit_score}</span></div>
-                  <div><span className="text-slate-500">{t("legacyRisk")}:</span> <span className="font-semibold text-slate-900">{tResult(`riskLevel.${selectedRecord.risk_level}` as any)}</span></div>
-                  <div>
-                    <span className="text-slate-500">{t("legacyDecision")}:</span>{" "}
-                    <span className="font-semibold text-slate-900">
-                      {tResult(`decisionShort.${selectedRecord.decision}` as any)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Modal Footer */}
-            <div className="mt-6 flex justify-end border-t border-slate-200 pt-4">
-              <button
-                onClick={() => setSelectedRecord(null)}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                {t("modalClose")}
-              </button>
-            </div>
-          </div>
-        </div>
+        <HistoryDetailModal selectedRecord={selectedRecord} onClose={() => setSelectedRecord(null)} />
       )}
     </div>
   );

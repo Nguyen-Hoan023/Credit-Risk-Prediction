@@ -1,9 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const t = useTranslations("footer");
+  const pathname = usePathname();
+
+  if (pathname.includes("/admin")) return null;
 
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white">

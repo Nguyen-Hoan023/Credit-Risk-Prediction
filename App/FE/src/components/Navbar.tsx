@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { isAuthenticated, logout, getCurrentUser } from "@/lib/auth";
 
 export default function Navbar() {
   const t = useTranslations("nav");
@@ -11,15 +12,23 @@ export default function Navbar() {
   const router = useRouter();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isRotating, setIsRotating] = useState(false);
+  const [isAuth, setIsAuth] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
-  // Refs for dynamic pill calculation
-  const viBtnRef = useRef<HTMLButtonElement>(null);
-  const enBtnRef = useRef<HTMLButtonElement>(null);
-  const [pillStyle, setPillStyle] = useState<{ left: number; width: number }>({
-    left: 0,
-    width: 0,
-  });
+  useEffect(() => {
+    const authStatus = isAuthenticated();
+    setIsAuth(authStatus);
+    
+    if (authStatus) {
+      getCurrentUser().then(user => {
+        if (user && user.full_name) {
+          setUserName(user.full_name);
+        }
+      });
+    } else {
+      setUserName(null);
+    }
+  }, [pathname]);
 
   const NAV_ITEMS = [
     { href: "/" as const, labelKey: "home" as const, icon: "🏠" },
@@ -27,29 +36,8 @@ export default function Navbar() {
     { href: "/history" as const, labelKey: "history" as const, icon: "📜" },
   ];
 
-  // Recalculate sliding pill position dynamically whenever locale or screen size changes
-  useEffect(() => {
-    const updatePill = () => {
-      const activeBtn = locale === "vi" ? viBtnRef.current : enBtnRef.current;
-      if (activeBtn) {
-        setPillStyle({
-          left: activeBtn.offsetLeft,
-          width: activeBtn.offsetWidth,
-        });
-      }
-    };
-
-    updatePill();
-    window.addEventListener("resize", updatePill);
-    return () => window.removeEventListener("resize", updatePill);
-  }, [locale]);
-
   const switchLocale = (newLocale: string) => {
     if (newLocale === locale) return;
-
-    // Globe spin effect
-    setIsRotating(true);
-    setTimeout(() => setIsRotating(false), 450);
 
     // Switch route keeping current pathname
     router.replace(pathname, { locale: newLocale });
@@ -61,120 +49,100 @@ export default function Navbar() {
     setTimeout(() => setToastMessage(null), 2500);
   };
 
+  if (pathname.includes("/admin")) return null;
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/85 backdrop-blur-md">
-        <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-          {/* Logo */}
+        <nav className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 sm:px-6 gap-2 sm:gap-6">
+          
+          {/* 1. Logo (Left) */}
           <Link
             href="/"
             className="flex items-center gap-2 text-xl font-extrabold tracking-tight transition-colors hover:text-blue-600 shrink-0"
           >
             <span className="text-2xl">🏦</span>
-            <span className="text-slate-900">
+            <span className="text-slate-900 hidden sm:inline-block whitespace-nowrap">
               Credit<span className="text-blue-600">Score</span>
             </span>
           </Link>
 
-          {/* Nav Links + Morphing Segmented Pill Language Switcher */}
-          <div className="flex items-center">
+          {/* 2. Main Navigation & Auth (Center/Right) */}
+          <div className="flex-1 flex items-center justify-end lg:justify-center gap-2 sm:gap-6">
             {/* Nav Items */}
-            <ul className="flex items-center gap-1 sm:gap-1.5">
+            <ul className="flex items-center gap-1 sm:gap-2 shrink-0">
               {NAV_ITEMS.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                         isActive
                           ? "bg-blue-50 text-blue-700 font-bold shadow-sm"
                           : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
                       }`}
                     >
                       <span>{item.icon}</span>
-                      <span className="hidden sm:inline">
-                        {t(item.labelKey)}
-                      </span>
+                      <span className="hidden md:inline">{t(item.labelKey)}</span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
 
-            {/* Vertical Divider & Spacing separator */}
-            <div className="ml-4 sm:ml-7 pl-4 sm:pl-7 border-l border-slate-200/90 flex items-center h-8">
-              {/* Morphing Segmented Pill Container */}
-              <div
-                className="relative inline-flex items-center rounded-xl bg-slate-100/90 p-1 border border-slate-200/80 shadow-inner overflow-hidden select-none"
-                role="group"
-                aria-label="Language selector"
+            <div className="hidden lg:block w-px h-6 bg-slate-200 shrink-0" />
+
+            {/* Login / Logout */}
+            <div className="flex items-center shrink-0">
+              {isAuth ? (
+                <div className="flex items-center gap-3">
+                  {userName && (
+                    <span className="text-sm font-semibold text-slate-700 hidden xl:inline-block whitespace-nowrap">
+                      👋 Chào, {userName}
+                    </span>
+                  )}
+                  <button
+                    onClick={async () => { await logout(); setIsAuth(false); setUserName(null); router.push("/"); }}
+                    className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap shrink-0"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors whitespace-nowrap shrink-0"
+                >
+                  Đăng nhập
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Language Switcher (Right-most & Separated) */}
+          <div className="flex items-center shrink-0 pl-2 sm:pl-4 border-l border-slate-200/90">
+            <div className="relative inline-flex items-center rounded-full p-1 bg-slate-100/80 border border-slate-200/60 shadow-inner shrink-0">
+              <button
+                onClick={() => switchLocale("vi")}
+                className={`relative flex items-center justify-center h-8 px-2 sm:px-3 rounded-full text-sm transition-all duration-200 ease-out ${
+                  locale === "vi" 
+                    ? "bg-white text-blue-600 font-bold shadow-sm scale-100" 
+                    : "text-slate-500 font-medium hover:text-slate-800 scale-95"
+                }`}
               >
-                {/* Globe Icon with smooth rotation */}
-                <span
-                  className={`pl-1.5 pr-1 text-slate-500 text-sm transition-transform duration-500 select-none ${
-                    isRotating ? "rotate-[360deg] scale-110 text-blue-600" : ""
-                  }`}
-                  aria-hidden="true"
-                >
-                  🌐
-                </span>
-
-                {/* Dynamic Animated Background Pill */}
-                <div
-                  className="absolute top-1 bottom-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/25 transition-all duration-300 ease-out"
-                  style={{
-                    left: `${pillStyle.left}px`,
-                    width: `${pillStyle.width}px`,
-                  }}
-                />
-
-                {/* Vietnamese Button */}
-                <button
-                  ref={viBtnRef}
-                  type="button"
-                  onClick={() => switchLocale("vi")}
-                  aria-label="Chuyển sang Tiếng Việt"
-                  aria-pressed={locale === "vi"}
-                  className={`relative z-10 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${
-                    locale === "vi"
-                      ? "text-white font-bold tracking-wide scale-100 opacity-100"
-                      : "text-slate-500 hover:text-slate-900 font-semibold scale-95 opacity-80 hover:opacity-100"
-                  }`}
-                >
-                  {locale === "vi" ? (
-                    <>
-                      <span className="sm:hidden">VI</span>
-                      <span className="hidden sm:inline">Tiếng Việt</span>
-                    </>
-                  ) : (
-                    <span>VN</span>
-                  )}
-                </button>
-
-                {/* English Button */}
-                <button
-                  ref={enBtnRef}
-                  type="button"
-                  onClick={() => switchLocale("en")}
-                  aria-label="Switch to English"
-                  aria-pressed={locale === "en"}
-                  className={`relative z-10 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${
-                    locale === "en"
-                      ? "text-white font-bold tracking-wide scale-100 opacity-100"
-                      : "text-slate-500 hover:text-slate-900 font-semibold scale-95 opacity-80 hover:opacity-100"
-                  }`}
-                >
-                  {locale === "en" ? (
-                    <>
-                      <span className="sm:hidden">EN</span>
-                      <span className="hidden sm:inline">English</span>
-                    </>
-                  ) : (
-                    <span>US</span>
-                  )}
-                </button>
-              </div>
+                🇻🇳 <span className="ml-1.5 hidden xl:inline-block whitespace-nowrap">Tiếng Việt</span>
+              </button>
+              <button
+                onClick={() => switchLocale("en")}
+                className={`relative flex items-center justify-center h-8 px-2 sm:px-3 rounded-full text-sm transition-all duration-200 ease-out ${
+                  locale === "en" 
+                    ? "bg-white text-blue-600 font-bold shadow-sm scale-100" 
+                    : "text-slate-500 font-medium hover:text-slate-800 scale-95"
+                }`}
+              >
+                🇺🇸 <span className="ml-1.5 hidden xl:inline-block whitespace-nowrap">English</span>
+              </button>
             </div>
           </div>
         </nav>

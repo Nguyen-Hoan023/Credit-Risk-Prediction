@@ -42,6 +42,16 @@ pip install -r requirements.txt
 | `sqlalchemy` | >= 2.0.0 | ORM (Object-Relational Mapper) để tương tác với PostgreSQL |
 | `psycopg2-binary` | >= 2.9.0 | Database driver kết nối Python tới PostgreSQL |
 
+#### Authentication & Security
+
+| Thư viện | Phiên bản | Mô tả |
+|---|---|---|
+| `python-jose[cryptography]` | >= 3.3.0 | Tạo và xác thực JSON Web Tokens (JWT) |
+| `passlib[bcrypt]` | >= 1.7.4 | Hashing mật khẩu an toàn |
+| `bcrypt` | == 3.2.2 | Thư viện mã hóa mật khẩu lõi |
+| `pydantic-settings` | >= 2.0.0 | Quản lý cấu hình, biến môi trường an toàn |
+| `email-validator` | >= 2.0.0 | Xác thực định dạng email người dùng |
+
 #### Machine Learning & Xử Lý Dữ Liệu
 
 | Thư viện | Phiên bản | Mô tả |
@@ -65,10 +75,17 @@ pip install -r requirements.txt
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.7.0
+pydantic-settings>=2.0.0
+email-validator>=2.0.0
 
 # Database
 sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.0
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt==3.2.2
 
 # Machine Learning
 lightgbm>=4.3.0
@@ -104,6 +121,8 @@ npm install
 | `react` | ^18.3.1 | Thư viện UI cốt lõi, xây dựng giao diện component-based |
 | `react-dom` | ^18.3.1 | Render React components lên DOM trình duyệt |
 | `next-intl` | ^3.26.5 | Đa ngôn ngữ (i18n) tích hợp với Next.js App Router |
+| `lucide-react` | ^0.453.0 | Thư viện Icon SVG linh hoạt và tối ưu cho React |
+| `recharts` | ^2.13.0 | Thư viện biểu đồ (charts) React dễ sử dụng và tùy biến |
 
 #### DevDependencies (Phát Triển)
 
@@ -133,10 +152,12 @@ npm install
     "lint": "next lint"
   },
   "dependencies": {
+    "lucide-react": "^0.453.0",
     "next": "^14.2.15",
     "next-intl": "^3.26.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

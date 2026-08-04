@@ -1,5 +1,6 @@
 import { CreditScoreRequest, CreditScoreResponse, RecommendationItem } from "./types";
 import { API_BASE_URL } from "./constants";
+import { apiClient } from "./auth";
 
 /**
  * Gửi hồ sơ vay lên backend để đánh giá credit score.
@@ -8,9 +9,8 @@ import { API_BASE_URL } from "./constants";
 export async function submitCreditScore(
   data: CreditScoreRequest
 ): Promise<CreditScoreResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/predict`, {
+  const response = await apiClient(`/api/predict`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
@@ -123,9 +123,8 @@ function normalizeDecision(decision: string | undefined, riskLevel: string, appr
  */
 export async function fetchCreditHistory(): Promise<any[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/history`, {
+    const response = await apiClient(`/api/history`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
@@ -143,6 +142,7 @@ export async function fetchCreditHistory(): Promise<any[]> {
       return {
         id: String(item.id),
         created_at: item.created_at,
+        user: item.user,
         person_age: item.person_age,
         person_income: item.person_income,
         loan_amnt: item.loan_amnt,
@@ -184,14 +184,12 @@ export async function fetchCreditHistory(): Promise<any[]> {
  */
 export async function clearCreditHistory(adminKey?: string): Promise<boolean> {
   try {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const headers: Record<string, string> = {};
     if (adminKey) {
       headers["X-Admin-Key"] = adminKey;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/history`, {
+    const response = await apiClient(`/api/history`, {
       method: "DELETE",
       headers,
     });

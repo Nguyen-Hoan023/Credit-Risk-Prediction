@@ -1,13 +1,43 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { isAuthenticated } from "@/lib/auth";
 import { useCreditScore } from "@/hooks/useCreditScore";
 import LoanForm from "@/components/LoanForm";
 import ResultCard from "@/components/ResultCard";
 
 export default function ApplyPage() {
+  const router = useRouter();
+  const [isAuth, setIsAuth] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setIsAuth(isAuthenticated());
+  }, []);
+
   const t = useTranslations("apply");
   const { result, isLoading, error, submit, reset } = useCreditScore();
+
+  if (isAuth === null) return null;
+
+  if (!isAuth) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center mt-10">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <span className="text-5xl">🔒</span>
+          <h2 className="mt-4 text-xl font-bold text-slate-900">Yêu cầu đăng nhập</h2>
+          <p className="mt-2 text-slate-600">Bạn vui lòng đăng nhập để xem và sử dụng tính năng này.</p>
+          <button
+            onClick={() => router.push("/login")}
+            className="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+          >
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">

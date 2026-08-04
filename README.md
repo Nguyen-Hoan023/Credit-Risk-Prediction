@@ -1,6 +1,6 @@
 # NovaBank CreditRisk — Hệ Thống Đánh Giá Rủi Ro Tín Dụng
 
-> 🌐 **Live Demo (Vercel)**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)
+> **Live Demo (Vercel)**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)
 
 NovaBank CreditRisk là hệ thống hỗ trợ chuyên viên ngân hàng đánh giá và phê duyệt hồ sơ vay vốn theo thời gian thực. Hệ thống tích hợp mô hình học máy **LightGBM** (được huấn luyện và tối ưu hóa siêu tham số trên dữ liệu thực tế) để dự báo xác suất vỡ nợ (Probability of Default — PD), quy đổi sang thang điểm tín dụng chuẩn hóa theo công thức Log-Odds (tương tự FICO Score 300–850), áp dụng các quy tắc nghiệp vụ ngân hàng và đưa ra quyết định phê duyệt tự động kèm khuyến nghị chi tiết.
 
@@ -34,7 +34,6 @@ NovaBank_CreditRisk/
 │
 ├── notebooks/       Jupyter Notebooks — EDA, Training, Evaluation
 ├── raw_data/        Dữ liệu gốc (CSV)
-├── sql/             Scripts DDL + Query phân tích
 └── Power BI/        Dashboard báo cáo rủi ro (file .pbix)
 ```
 
@@ -71,6 +70,9 @@ NovaBank_CreditRisk/
 ├── App/
 │   ├── BE/                               Backend — FastAPI Server
 │   │   ├── main.py                       Entry point, định nghĩa toàn bộ API routes
+│   │   ├── api/v1/                       Thư mục chứa các API routers (auth, admin, predictions)
+│   │   ├── core/config.py                Cấu hình hệ thống (JWT, bảo mật)
+│   │   ├── service/user_service.py       Xử lý logic người dùng
 │   │   ├── model.py                      Load và quản lý LightGBM pipeline artifact
 │   │   ├── preprocess.py                 Feature engineering (tạo 22 features từ 16 đầu vào)
 │   │   ├── preprocessors.py              Các hàm biến đổi dữ liệu bổ sung
@@ -99,6 +101,9 @@ NovaBank_CreditRisk/
 │       │   │   └── [locale]/             Nhóm route theo ngôn ngữ
 │       │   │       ├── layout.tsx        Layout có locale (Navbar, Footer)
 │       │   │       ├── page.tsx          Trang chủ — hiển thị kết quả đánh giá
+│       │   │       ├── login/            Trang đăng nhập hệ thống
+│       │   │       ├── register/         Trang đăng ký tài khoản
+│       │   │       ├── admin/            Trang quản trị (dành cho role Admin)
 │       │   │       ├── apply/
 │       │   │       │   └── page.tsx      Trang nhập hồ sơ vay
 │       │   │       └── history/
@@ -193,7 +198,14 @@ NovaBank_CreditRisk/
 
 ## Tính Năng Chính
 
-### 1. Form Đánh Giá Hồ Sơ (16 tham số đầu vào)
+### 1. Hệ Thống Xác Thực & Quản Trị
+
+- Xác thực người dùng qua chuẩn JWT (JSON Web Tokens).
+- Phân quyền chặt chẽ (Role-based access control): `admin` (Quản trị viên) và `user` (Nhân viên / Sinh viên).
+- Bảo mật mật khẩu bằng thuật toán mã hóa một chiều (bcrypt).
+- **Admin Dashboard**: Giao diện chuyên biệt dành cho quản trị viên để giám sát danh sách người dùng và tra cứu toàn bộ hồ sơ tín dụng trên hệ thống.
+
+### 2. Form Đánh Giá Hồ Sơ (16 tham số đầu vào)
 
 Người dùng nhập đầy đủ thông tin theo 3 nhóm:
 
@@ -298,8 +310,12 @@ Sau khi khởi chạy backend, tài liệu API đầy đủ có tại `http://12
 |---|---|---|---|
 | GET | `/health` | Kiểm tra trạng thái server và trạng thái model | Không yêu cầu |
 | POST | `/api/predict` | Gửi hồ sơ tín dụng, nhận kết quả đánh giá | Không yêu cầu |
-| GET | `/api/history` | Lấy danh sách lịch sử đánh giá (mặc định 100 bản ghi) | Không yêu cầu |
+| GET | `/api/history` | Lấy danh sách lịch sử đánh giá (mặc định 100 bản ghi) | Có yêu cầu |
 | DELETE | `/api/history` | Xóa toàn bộ lịch sử đánh giá | Yêu cầu `X-Admin-Key` header |
+| POST | `/api/auth/register` | Đăng ký tài khoản người dùng mới | Không yêu cầu |
+| POST | `/api/auth/login` | Đăng nhập và nhận Access Token (JWT) | Không yêu cầu |
+| GET | `/api/auth/me` | Truy xuất thông tin tài khoản hiện tại | Yêu cầu JWT |
+| GET | `/api/admin/users` | Lấy danh sách toàn bộ người dùng hệ thống | Yêu cầu JWT (Admin) |
 
 ---
 
@@ -426,9 +442,22 @@ Thứ tự chạy notebook được đề xuất:
 
 ## Cơ Sở Dữ Liệu
 
+### Schema bảng `users`
+
+Bảng quản lý tài khoản người dùng và phân quyền:
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|---|---|---|
+| id | INTEGER | Khóa chính, tự tăng |
+| email | VARCHAR | Email đăng nhập (độc nhất) |
+| full_name | VARCHAR | Họ và tên người dùng |
+| hashed_password | VARCHAR | Mật khẩu đã được mã hóa (bcrypt) |
+| role | VARCHAR | Vai trò người dùng (`admin` hoặc `user`) |
+| is_active | BOOLEAN | Trạng thái hoạt động của tài khoản |
+
 ### Schema bảng `predictions`
 
-Bảng chính lưu toàn bộ lịch sử đánh giá:
+Bảng chính lưu toàn bộ lịch sử đánh giá, liên kết với `users`:
 
 | Cột | Kiểu dữ liệu | Mô tả |
 |---|---|---|
