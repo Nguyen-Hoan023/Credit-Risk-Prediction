@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getAccessToken } from "@/lib/auth";
+import { API_BASE_URL } from "@/lib/constants";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -10,7 +11,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const token = getAccessToken();
     if (token) {
-      fetch("http://localhost:8000/api/admin/stats", {
+      fetch(`${API_BASE_URL}/api/admin/stats`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

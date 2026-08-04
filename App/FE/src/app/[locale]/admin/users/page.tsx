@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/auth";
 import { Plus } from "lucide-react";
+import { API_BASE_URL } from "@/lib/constants";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -12,7 +13,7 @@ export default function AdminUsers() {
   const fetchUsers = () => {
     const token = getAccessToken();
     if (token) {
-      fetch("http://localhost:8000/api/admin/users", {
+      fetch(`${API_BASE_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => res.json())
@@ -29,7 +30,7 @@ export default function AdminUsers() {
     e.preventDefault();
     try {
       const token = getAccessToken();
-      const res = await fetch("http://localhost:8000/api/admin/users", {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
