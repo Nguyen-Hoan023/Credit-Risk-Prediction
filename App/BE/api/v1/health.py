@@ -11,7 +11,7 @@ from ml.model import is_loaded
 router = APIRouter(tags=["System"])
 
 
-@router.get("/health", response_model=HealthResponse, summary="Health check")
+@router.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse, summary="Health check")
 async def health_check():
     """Server + model status check — used by Render.com uptime monitoring."""
     return HealthResponse(
