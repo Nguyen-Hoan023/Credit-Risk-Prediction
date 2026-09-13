@@ -1,514 +1,470 @@
-# NovaBank CreditRisk — Hệ Thống Đánh Giá Rủi Ro Tín Dụng
+# NovaBank — Credit Risk Analysis & Intelligent Scoring System
 
-> **Live Demo (Vercel)**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)
+> **Live Web Application**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)  
+> **Interactive API Documentation (Swagger)**: [https://credit-risk-prediction-7nxt.onrender.com/docs](https://credit-risk-prediction-7nxt.onrender.com/docs)  
+> **Tech Stack**: FastAPI · LightGBM · Next.js 16 · PostgreSQL · Power BI · Scikit-Learn
 
-NovaBank CreditRisk là hệ thống hỗ trợ chuyên viên ngân hàng đánh giá và phê duyệt hồ sơ vay vốn theo thời gian thực. Hệ thống tích hợp mô hình học máy **LightGBM** (được huấn luyện và tối ưu hóa siêu tham số trên dữ liệu thực tế) để dự báo xác suất vỡ nợ (Probability of Default — PD), quy đổi sang thang điểm tín dụng chuẩn hóa theo công thức Log-Odds (tương tự FICO Score 300–850), áp dụng các quy tắc nghiệp vụ ngân hàng và đưa ra quyết định phê duyệt tự động kèm khuyến nghị chi tiết.
-
----
-
-## Mục Lục
-
-- [Tổng Quan Kiến Trúc](#tổng-quan-kiến-trúc)
-- [Cấu Trúc Thư Mục](#cấu-trúc-thư-mục)
-- [Công Nghệ Sử Dụng](#công-nghệ-sử-dụng)
-- [Tính Năng Chính](#tính-năng-chính)
-- [Mô Hình Học Máy](#mô-hình-học-máy)
-- [API Endpoints](#api-endpoints)
-- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
-- [Hướng Dẫn Khởi Chạy](#hướng-dẫn-khởi-chạy)
-- [Cơ Sở Dữ Liệu](#cơ-sở-dữ-liệu)
-- [Phân Tích Dữ Liệu & Power BI](#phân-tích-dữ-liệu--power-bi)
+Hệ thống phân tích rủi ro tín dụng tiêu dùng toàn diện dựa trên dữ liệu lịch sử (**32,581 hồ sơ vay, 29 biến đặc trưng**, tỷ lệ vỡ nợ nền 21.8%). Dự án tích hợp đầy đủ chu trình phân tích dữ liệu thực tế tại các định chế tài chính: từ **khám phá dữ liệu (EDA)**, **đúc kết insight & thiết kế chính sách tín dụng (Business Policy)**, **mô hình hóa rủi ro & chấm điểm tín dụng (Machine Learning & Credit Scoring)** đến **xây dựng Dashboard quản trị danh mục (Power BI)** và **ứng dụng web phê duyệt hồ sơ theo thời gian thực**.
 
 ---
 
-## Tổng Quan Kiến Trúc
+## Mục Lục / Table of Contents
 
-Dự án được thiết kế theo kiến trúc **client-server** phân tách hoàn toàn:
-
-```
-NovaBank_CreditRisk/
-│
-├── App/
-│   ├── BE/          FastAPI (Python) — AI Engine + REST API + PostgreSQL
-│   └── FE/          Next.js (TypeScript) — Giao diện người dùng
-│
-├── notebooks/       Jupyter Notebooks — EDA, Training, Evaluation
-├── raw_data/        Dữ liệu gốc (CSV)
-└── Power BI/        Dashboard báo cáo rủi ro (file .pbix)
-```
-
-Luồng xử lý một yêu cầu đánh giá:
-
-```
-[Người dùng nhập 16 tham số]
-        |
-        v
-[Frontend Next.js] -- HTTP POST /api/predict -->  [Backend FastAPI]
-                                                        |
-                                             [Tiền xử lý & Feature Engineering]
-                                                        |
-                                             [LightGBM Pipeline predict_proba]
-                                                        |
-                                             [Log-Odds -> Credit Score 300-850]
-                                                        |
-                                             [Áp dụng Business Rules]
-                                                        |
-                                             [Sinh khuyến nghị hành động]
-                                                        |
-                                             [Lưu lịch sử -> PostgreSQL]
-                                                        |
-        [Hiển thị kết quả + Dashboard] <-- JSON Response --
-```
+- [1. Business Context & Problem Statement](#1-business-context--problem-statement)
+- [2. Key Insights from Exploratory Data Analysis (EDA)](#2-key-insights-from-exploratory-data-analysis-eda)
+  - [2.1 Portfolio Landscape & Geographic Neutrality](#21-portfolio-landscape--geographic-neutrality)
+  - [2.2 Risk Concentration by Segment & Loan Purpose](#22-risk-concentration-by-segment--loan-purpose)
+  - [2.3 Payment-to-Income (PTI) — Thước Đo Căng Thẳng Dòng Tiền](#23-payment-to-income-pti--thước-đo-căng-thẳng-dòng-tiền)
+  - [2.4 Phân Hạng Tín Dụng Hiện Hữu & Bài Toán Data Leakage](#24-phân-hạng-tín-dụng-hiện-hữu--bài-toán-data-leakage)
+  - [2.5 Điểm Nóng Bất Định (Uncertainty Hotspot) — Nhóm MORTGAGE](#25-điểm-nóng-bất-định-uncertainty-hotspot--nhóm-mortgage)
+  - [2.6 Quản Trị Chất Lượng Dữ Liệu (Data Quality & Governance)](#26-quản-trị-chất-lượng-dữ-liệu-data-quality--governance)
+- [3. Business Decisions & Credit Policy](#3-business-decisions--credit-policy)
+- [4. Machine Learning: Credit Scoring & Risk Tiering](#4-machine-learning-credit-scoring--risk-tiering)
+  - [4.1 Scoring Pipeline Architecture](#41-scoring-pipeline-architecture)
+  - [4.2 FICO-Standard Log-Odds Scoring Formula](#42-fico-standard-log-odds-scoring-formula)
+  - [4.3 Three-Tier Decision Framework](#43-three-tier-decision-framework)
+  - [4.4 Khả Năng Giải Trình & Reason Codes](#44-khả-năng-giải-trình--reason-codes)
+- [5. Model Evaluation & Reliability](#5-model-evaluation--reliability)
+  - [5.1 Performance Benchmark](#51-performance-benchmark)
+  - [5.2 Kỹ Thuật Thẩm Định & Đảm Bảo Độ Tin Cậy](#52-kỹ-thuật-thẩm-định--đảm-bảo-độ-tin-cậy)
+- [6. Power BI Dashboard](#6-power-bi-dashboard)
+- [7. System Architecture & Deployment](#7-system-architecture--deployment)
+- [8. Quick Start & Local Development](#8-quick-start--local-development)
+- [9. Project Structure](#9-project-structure)
+- [10. Limitations & Future Roadmap](#10-limitations--future-roadmap)
 
 ---
 
-## Cấu Trúc Thư Mục
+## 1. Business Context & Problem Statement
 
-```
-NovaBank_CreditRisk/
-│
-├── App/
-│   ├── BE/                               Backend — FastAPI Server
-│   │   ├── main.py                       Entry point, định nghĩa toàn bộ API routes
-│   │   ├── api/v1/                       Thư mục chứa các API routers (auth, admin, predictions)
-│   │   ├── core/config.py                Cấu hình hệ thống (JWT, bảo mật)
-│   │   ├── service/user_service.py       Xử lý logic người dùng
-│   │   ├── model.py                      Load và quản lý LightGBM pipeline artifact
-│   │   ├── preprocess.py                 Feature engineering (tạo 22 features từ 16 đầu vào)
-│   │   ├── preprocessors.py              Các hàm biến đổi dữ liệu bổ sung
-│   │   ├── scoring.py                    Chuyển đổi PD -> Credit Score -> Risk Tier -> Decision
-│   │   ├── schema.py                     Pydantic models: Request/Response validation
-│   │   ├── diagnose_startup.py           Script kiểm tra và chẩn đoán lỗi khi khởi động
-│   │   ├── requirements.txt              Thư viện Python cần thiết cho Backend
-│   │   ├── render.yaml                   Cấu hình deploy lên Render.com
-│   │   ├── .env.example                  Mẫu biến môi trường
-│   │   ├── artifacts/
-│   │   │   ├── lgbm_pipeline.pkl         Model LightGBM đã huấn luyện (pipeline)
-│   │   │   └── metadata.json             Cấu hình thang điểm, ngưỡng, danh sách features
-│   │   └── database/
-│   │       ├── __init__.py
-│   │       ├── connection.py             Kết nối SQLAlchemy tới PostgreSQL
-│   │       ├── models.py                 ORM Models (bảng predictions, model_metadata)
-│   │       └── crud.py                   Các hàm thao tác CRUD với database
-│   │
-│   └── FE/                               Frontend — Next.js Application
-│       ├── src/
-│       │   ├── middleware.ts              Middleware xử lý i18n routing (next-intl)
-│       │   ├── app/                      Next.js App Router
-│       │   │   ├── globals.css           CSS toàn cục
-│       │   │   ├── layout.tsx            Root layout
-│       │   │   ├── page.tsx              Trang gốc (redirect về locale mặc định)
-│       │   │   └── [locale]/             Nhóm route theo ngôn ngữ
-│       │   │       ├── layout.tsx        Layout có locale (Navbar, Footer)
-│       │   │       ├── page.tsx          Trang chủ — hiển thị kết quả đánh giá
-│       │   │       ├── login/            Trang đăng nhập hệ thống
-│       │   │       ├── register/         Trang đăng ký tài khoản
-│       │   │       ├── admin/            Trang quản trị (dành cho role Admin)
-│       │   │       ├── apply/
-│       │   │       │   └── page.tsx      Trang nhập hồ sơ vay
-│       │   │       └── history/
-│       │   │           └── page.tsx      Trang xem lịch sử đánh giá
-│       │   ├── components/
-│       │   │   ├── LoanForm.tsx          Form nhập 16 tham số tín dụng
-│       │   │   ├── ResultCard.tsx        Thẻ hiển thị kết quả đánh giá
-│       │   │   ├── CreditScoreGauge.tsx  Đồng hồ hiển thị điểm tín dụng
-│       │   │   ├── RecommendationBox.tsx Hộp khuyến nghị hành động
-│       │   │   ├── Navbar.tsx            Thanh điều hướng (hỗ trợ chuyển ngôn ngữ)
-│       │   │   └── Footer.tsx            Chân trang
-│       │   ├── hooks/
-│       │   │   └── useCreditScore.ts     Custom hook xử lý logic gọi API chấm điểm
-│       │   ├── lib/
-│       │   │   ├── api.ts                Hàm gọi API Backend (predict, history)
-│       │   │   ├── constants.ts          Hằng số dùng chung (URL, enum values...)
-│       │   │   └── types.ts              Định nghĩa TypeScript types/interfaces
-│       │   ├── i18n/
-│       │   │   ├── routing.ts            Cấu hình locales và defaultLocale
-│       │   │   ├── request.ts            Cấu hình next-intl server-side
-│       │   │   └── navigation.ts         Các hàm navigation có locale
-│       │   └── messages/
-│       │       ├── vi.json               Bản dịch Tiếng Việt
-│       │       └── en.json               Bản dịch Tiếng Anh
-│       ├── package.json                  Khai báo dependencies
-│       └── tsconfig.json                 Cấu hình TypeScript
-│
-├── notebooks/
-│   ├── data_understanding.ipynb          Khám phá và hiểu cấu trúc dữ liệu ban đầu
-│   ├── EDA.ipynb                         Phân tích dữ liệu khám phá chuyên sâu (EDA)
-│   ├── powerBi.ipynb                     Chuẩn bị và xuất dữ liệu cho Power BI
-│   ├── model.ipynb                       Xây dựng, huấn luyện và đánh giá mô hình LightGBM
-│   └── preprocessors.py                  Module tiền xử lý dùng chung trong notebooks
-│
-├── raw_data/
-│   ├── Credit Risk Data.csv              Dữ liệu tín dụng gốc (~45,000 bản ghi)
-│   └── Data Dictionary.csv               Từ điển mô tả các trường dữ liệu
-│
-├── Power BI/
-│   └── risk.pbix                         Dashboard phân tích rủi ro tín dụng
-│
-├── requirements.txt                      Tổng hợp toàn bộ thư viện Python cần cài đặt
-└── README.md                             Tài liệu dự án (file này)
-```
+Trong hoạt động cho vay tiêu dùng bán lẻ, các ngân hàng truyền thống đối mặt với tình thế tiến thoái lưỡng nan kinh điển: **tối đa hóa tăng trưởng tín dụng** đồng thời **kiểm soát tỷ lệ nợ xấu (NPL)** trong ngưỡng an toàn vốn.
+
+Các phương pháp xét duyệt truyền thống dựa trên bộ quy tắc tĩnh (rule-based) hoặc thẩm định trực quan của chuyên viên tín dụng bộc lộ nhiều hạn chế:
+- **Tốc độ xử lý chậm**: Hồ sơ mất nhiều ngày để đối soát và ra quyết định.
+- **Tính chủ quan và thiếu nhất quán**: Các chuyên viên khác nhau đưa ra phán quyết khác nhau đối với cùng một mức độ rủi ro.
+- **Không định lượng được rủi ro cận biên**: Quy tắc cứng 'đạt/không đạt' loại trừ các khách hàng tiềm năng ở vùng ranh giới hoặc chấp thuận khách hàng ẩn chứa rủi ro dòng tiền phức tạp.
+
+**Mục tiêu của dự án:**
+1. **Định lượng xác suất vỡ nợ (Probability of Default - PD)** của từng hồ sơ vay cá nhân bằng các thuật toán học máy tiên tiến.
+2. **Khai phá các động lực rủi ro cốt lõi (Key Risk Drivers)** từ dữ liệu lịch sử để làm căn cứ tái thiết kế chính sách cấp tín dụng.
+3. **Chuyển hóa PD thành thang điểm tín dụng chuẩn hóa 300–850** (FICO standard) kết hợp phân nhóm rủi ro 3 cấp (*Approve / Review / Reject*) kèm mã lý do giải trình minh bạch.
+4. **Triển khai ứng dụng hoàn chỉnh (End-to-End)**: Cung cấp giao diện web cho chuyên viên tín dụng thao tác nhập liệu thời gian thực và Dashboard Power BI cho cấp quản lý giám sát sức khỏe danh mục.
+
+**Nguồn dữ liệu**: `raw_data/Credit Risk Data.csv` gồm **32,581 bản ghi khoản vay** tại 3 thị trường phát triển (Mỹ, Anh, Canada). Biến mục tiêu là `loan_status` (0 = trả nợ đúng hạn, 1 = vỡ nợ / quá hạn nghiêm trọng).
 
 ---
 
-## Công Nghệ Sử Dụng
+## 2. Key Insights from Exploratory Data Analysis (EDA)
 
-### Backend (Python)
+> Quá trình phân tích chuyên sâu được thực nghiệm chi tiết tại notebook [`notebooks/EDA.ipynb`](notebooks/EDA.ipynb).
 
-| Thành phần | Công nghệ | Phiên bản | Mục đích |
+### 2.1 Portfolio Landscape & Geographic Neutrality
+
+- **Tỷ lệ nợ xấu nền (Baseline Default Rate)**: Đạt **21.8%** (7,108 / 32,581 khoản vay). Đây là bài toán mất cân bằng lớp (tỷ lệ xấp xỉ 4:1), do đó **PR-AUC (Precision-Recall AUC)** và **F1-Score** được lựa chọn làm thước đo chính thay cho Accuracy (vốn có thể gây ngộ nhận về hiệu năng).
+- **Đặc trưng phân phối**: Các biến tài chính cốt lõi như thu nhập hàng năm (`person_income`) và số tiền xin vay (`loan_amnt`) có phân phối lệch phải mạnh (right-skewed), chứa các giá trị ngoại lai cực lớn → Cần xử lý bằng phép biến đổi logarit (`np.log1p`) trước khi đưa vào mô hình.
+- **Tính trung lập về địa lý (Geographic Invariance)**: Tỷ lệ vỡ nợ gần như tương đồng tuyệt đối giữa 3 thị trường:
+  - Hoa Kỳ (US): **21.8%**
+  - Vương quốc Anh (UK): **21.9%**
+  - Canada: **21.7%**
+  
+  *Insight nghiệp vụ*: Rủi ro tín dụng tiêu dùng **không xuất phát từ sự khác biệt quốc gia**, mà bị chi phối bởi các chỉ số tài chính cá nhân vi mô. Điều này cho phép tổ chức áp dụng một **khung chính sách tín dụng và mô hình chấm điểm thống nhất** trên toàn cầu mà không lo ngại thiên vị địa lý hay vi phạm quy định chống phân biệt đối xử (Fair Lending Compliance).
+
+---
+
+### 2.2 Risk Concentration by Segment & Loan Purpose
+
+Phân tích tỷ lệ vỡ nợ theo từng phân khúc khách hàng so với tỷ lệ nền danh mục (21.8%):
+
+| Phân khúc / Đặc điểm hồ sơ | Tỷ lệ vỡ nợ | Độ lệch so với nền | Đánh giá rủi ro |
 |---|---|---|---|
-| Web Framework | FastAPI | >= 0.111.0 | REST API server, tài liệu Swagger tự động |
-| ASGI Server | Uvicorn | >= 0.30.0 | Chạy ứng dụng FastAPI bất đồng bộ |
-| Data Validation | Pydantic | >= 2.7.0 | Kiểm tra và định nghĩa schema request/response |
-| ORM | SQLAlchemy | >= 2.0.0 | Truy vấn cơ sở dữ liệu theo ORM |
-| DB Driver | psycopg2-binary | >= 2.9.0 | Kết nối tới PostgreSQL |
-| Machine Learning | LightGBM | >= 4.3.0 | Mô hình dự báo xác suất vỡ nợ |
-| ML Utilities | scikit-learn | >= 1.4.0 | Pipeline, preprocessing, metrics |
-| Data Processing | pandas | >= 2.2.0 | Xử lý DataFrame đầu vào |
-| Numerical | numpy | >= 1.26.0 | Tính toán Log-Odds, clipping |
-| Serialization | joblib | >= 1.4.0 | Load/save model pipeline (.pkl) |
-| Environment | python-dotenv | >= 1.0.0 | Quản lý biến môi trường từ file .env |
+| Có tiền sử nợ xấu (`cb_person_default_on_file = Y`) | **37.8%** | **+16.0 pp** | **Nguy cơ cao nhất** |
+| Đang thuê nhà (`RENT`) | **31.6%** | **+9.8 pp** | Rủi ro rất cao |
+| Vay hợp nhất nợ (`DEBTCONSOLIDATION`) | **28.6%** | **+6.8 pp** | Căng thẳng thanh khoản |
+| Vay chi phí y tế khẩn cấp (`MEDICAL`) | **26.7%** | **+4.9 pp** | Chi tiêu ngoài dự kiến |
+| Vay sửa chữa nhà cửa (`HOMEIMPROVEMENT`) | **26.1%** | **+4.3 pp** | Rủi ro trung bình cao |
+| Vay học tập, giáo dục (`EDUCATION`) | **17.2%** | **-4.6 pp** | Rủi ro thấp |
+| Vay đầu tư kinh doanh / mạo hiểm (`VENTURE`) | **14.8%** | **-7.0 pp** | Rủi ro thấp |
+| Đang vay mua nhà thế chấp (`MORTGAGE`) | **12.6%** | **-9.2 pp** | Khá an toàn |
+| Đã sở hữu nhà hoàn toàn (`OWN`) | **7.5%** | **-14.3 pp** | **An toàn nhất** |
 
-### Frontend (TypeScript / Node.js)
-
-| Thành phần | Công nghệ | Phiên bản | Mục đích |
-|---|---|---|---|
-| Framework | Next.js | ^14.2.15 | React framework với App Router, SSR |
-| UI Library | React | ^18.3.1 | Xây dựng giao diện component-based |
-| Ngôn ngữ | TypeScript | ^5.6.3 | Kiểm tra kiểu tĩnh, an toàn hơn JS thuần |
-| Styling | Tailwind CSS | ^4.0.0 | Utility-first CSS framework |
-| Internationalization | next-intl | ^3.26.5 | Đa ngôn ngữ (Tiếng Việt / English) |
-| PostCSS | postcss | ^8.4.47 | Xử lý CSS (tích hợp với Tailwind) |
-| Linting | ESLint | ^8.57.1 | Kiểm tra chất lượng code |
-
-### Phân Tích & Dữ Liệu
-
-| Công nghệ | Mục đích |
-|---|---|
-| Jupyter Notebook | Môi trường EDA, huấn luyện và đánh giá mô hình |
-| pandas, numpy | Xử lý và phân tích dữ liệu |
-| matplotlib, seaborn | Trực quan hóa dữ liệu |
-| scikit-learn | Preprocessing, pipeline, metrics đánh giá mô hình |
-| LightGBM | Thuật toán Gradient Boosting chính |
-| imbalanced-learn | Xử lý mất cân bằng lớp bằng SMOTE |
-| PostgreSQL | Cơ sở dữ liệu lưu trữ lịch sử đánh giá |
-| Microsoft Power BI | Dashboard báo cáo và phân tích rủi ro |
+**Bản chất kinh tế (Economic Mechanisms):**
+1. **Đệm tài sản phòng ngừa (Home-Equity Buffer)**: Người sở hữu nhà (`OWN`, tỷ lệ vỡ nợ chỉ 7.5%) có nền tảng tích lũy tài sản vững chắc để vượt qua các biến cố tài chính ngắn hạn. Ngược lại, người đi thuê nhà (`RENT`, 31.6%) chịu áp lực kép từ chi phí sinh hoạt cố định và thiếu hụt tài sản dự phòng.
+2. **Tín hiệu đảo nợ (Rollover Debt Signal)**: Khách hàng vay hợp nhất nợ (`DEBTCONSOLIDATION`) thường đã rơi vào tình trạng bội chi hoặc sử dụng đòn bẩy quá mức từ trước; khoản vay mới thường chỉ trì hoãn việc mất khả năng thanh toán thay vì giải quyết gốc rễ.
+3. **Cú sốc thanh khoản thụ động**: Vay y tế (`MEDICAL`) là dạng chi tiêu bắt buộc phát sinh ngoài kế hoạch, thường đi kèm với việc gián đoạn thu nhập lao động do vấn đề sức khỏe.
 
 ---
 
-## Tính Năng Chính
+### 2.3 Payment-to-Income (PTI) — Thước Đo Căng Thẳng Dòng Tiền
 
-### 1. Hệ Thống Xác Thực & Quản Trị
+Phân tích định lượng khẳng định tỷ lệ nghĩa vụ nợ trên thu nhập (PTI / `loan_percent_income`) là biến số có sức mạnh phân loại rủi ro vượt trội:
 
-- Xác thực người dùng qua chuẩn JWT (JSON Web Tokens).
-- Phân quyền chặt chẽ (Role-based access control): `admin` (Quản trị viên) và `user` (Nhân viên / Sinh viên).
-- Bảo mật mật khẩu bằng thuật toán mã hóa một chiều (bcrypt).
-- **Admin Dashboard**: Giao diện chuyên biệt dành cho quản trị viên để giám sát danh sách người dùng và tra cứu toàn bộ hồ sơ tín dụng trên hệ thống.
-
-### 2. Form Đánh Giá Hồ Sơ (16 tham số đầu vào)
-
-Người dùng nhập đầy đủ thông tin theo 3 nhóm:
-
-**Thông tin cá nhân:**
-- Tuổi (`person_age`)
-- Thu nhập hàng năm (`person_income`)
-- Hình thức cư trú (`person_home_ownership`): RENT / MORTGAGE / OWN / OTHER
-- Số năm đi làm (`person_emp_length`)
-- Loại hình việc làm (`employment_type`): Full-time / Part-time / Self-employed / Unemployed
-- Trình độ học vấn (`education_level`): High School / Bachelor / Master / PhD
-
-**Thông tin khoản vay:**
-- Số tiền vay (`loan_amnt`)
-- Mục đích vay (`loan_intent`): EDUCATION / MEDICAL / PERSONAL / VENTURE / HOMEIMPROVEMENT / DEBTCONSOLIDATION
-- Kỳ hạn vay tính theo tháng (`loan_term_months`)
-- Lãi suất khoản vay (`loan_int_rate`)
-- Nợ khác hiện tại (`other_debt`)
-
-**Lịch sử tín dụng:**
-- Số năm lịch sử tín dụng (`cb_person_cred_hist_length`)
-- Số tài khoản tín dụng đang mở (`open_accounts`)
-- Số lần trễ hạn thanh toán trong quá khứ (`past_delinquencies`)
-- Tỷ lệ sử dụng hạn mức tín dụng (`credit_utilization_ratio`)
-- Từng vỡ nợ trong lịch sử (`cb_person_default_on_file`): Y / N
-
-### 2. Quy Trình Chấm Điểm Tự Động (6 bước)
-
-Sau khi nhận 16 tham số, backend thực hiện tuần tự:
-
-1. **Feature Engineering**: Tạo 22 features từ 16 đầu vào (bao gồm `loan_percent_income`, `debt_to_income_ratio`, `loan_to_income_ratio`, log-transform các biến thu nhập, flag missing values)
-2. **Dự báo PD**: LightGBM pipeline trả về xác suất vỡ nợ trong khoảng [0.0, 1.0]
-3. **Quy đổi điểm**: PD chuyển sang Credit Score 300–850 theo công thức Log-Odds chuẩn
-4. **Phân loại rủi ro**: Gán mức rủi ro dựa trên ngưỡng điểm từ `metadata.json`
-5. **Áp dụng Business Rules**: Các luật cứng về vỡ nợ lịch sử, tỷ lệ nợ/thu nhập, tỷ lệ trễ hạn
-6. **Sinh khuyến nghị**: Phân tích nguyên nhân rủi ro và đề xuất hành động cụ thể
-
-### 3. Ba Mức Quyết Định
-
-| Mức quyết định | Ngưỡng điểm | Ý nghĩa |
+| Trạng thái khoản vay | PTI Trung bình | Độ lệch |
 |---|---|---|
-| PHE DUYET (Approved) | > 643 | Rủi ro thấp, hồ sơ đủ điều kiện phê duyệt |
-| XEM XET (Review) | 617 — 643 | Rủi ro trung bình, cần thẩm định thêm |
-| TU CHOI (Rejected) | <= 616 | Rủi ro cao, không đủ điều kiện |
+| Người vay trả nợ tốt (Non-Default) | **14.9%** | Vùng an toàn dòng tiền |
+| Người vay vỡ nợ (Default) | **24.7%** | **+9.8 pp** (Chênh lệch ~10 điểm %) |
 
-### 4. Trang Lịch Sử Đánh Giá
-
-- Lưu trữ bền vững toàn bộ lịch sử trên **PostgreSQL** với đầy đủ 16 trường đầu vào và kết quả chấm điểm
-- Cơ chế **Fallback tự động** sang `localStorage` trình duyệt khi Backend hoặc Database offline
-- Bộ lọc nâng cao theo mức rủi ro và trạng thái quyết định
-- Nút "Chi tiết" mở Modal hiển thị toàn bộ dữ liệu hồ sơ gốc
-
-### 5. Đa Ngôn Ngữ (i18n)
-
-Giao diện hỗ trợ chuyển đổi linh hoạt giữa **Tiếng Việt** và **Tiếng Anh** thông qua `next-intl`. Backend trả về các mã chuẩn tiếng Anh (APPROVE / REVIEW / REJECT, reason codes), Frontend chịu trách nhiệm dịch sang ngôn ngữ hiển thị.
+*Insight đột phá*: Khách hàng vỡ nợ không nhất thiết là người có thu nhập thấp tuyệt đối, mà là người có **biên độ an toàn dòng tiền (Cashflow Buffer) bị triệt tiêu**. Khi nghĩa vụ nợ hàng tháng tiếp cận và vượt qua mốc **25% thu nhập**, người vay mất hoàn toàn khả năng co giãn chi tiêu trước các biến cố lạm phát, phát sinh chi phí y tế hoặc sụt giảm tiền thưởng. Ngưỡng **PTI 25%** chính là cơ sở định lượng để thiết lập chốt chặn chính sách (Policy Hard Cap).
 
 ---
 
-## Mô Hình Học Máy
+### 2.4 Phân Hạng Tín Dụng Hiện Hữu & Bài Toán Data Leakage
 
-### Dữ liệu huấn luyện
+Hệ thống phân hạng nội bộ truyền thống (`loan_grade`) ghi nhận sự gia tăng rủi ro đơn điệu:
+$$\text{Grade A: } 9.9\% \longrightarrow \text{B: } 16.3\% \longrightarrow \text{C: } 20.7\% \longrightarrow \text{D: } 59.0\% \longrightarrow \text{E: } 64.4\% \longrightarrow \text{F: } 70.5\% \longrightarrow \text{G: } 98.4\%$$
 
-- Nguồn: Dataset tín dụng thực tế 
-- File gốc: `raw_data/Credit Risk Data.csv`
-- Biến mục tiêu: `loan_status` (0 = Không vỡ nợ, 1 = Vỡ nợ)
-
-### Pipeline mô hình
-
-```
-Raw Input (16 features)
-    -> Feature Engineering (preprocess.py)     22 features
-    -> LightGBM Pipeline (lgbm_pipeline.pkl)   predict_proba -> PD
-    -> Log-Odds Scoring (scoring.py)           Credit Score 300-850
-    -> Business Rules Engine                   Final Decision
-```
-
-### Thang điểm tín dụng (Log-Odds)
-
-Công thức chuẩn hóa tương tự FICO Score: từ 300-850 điểm 
-
-### Ngưỡng phân loại (từ `artifacts/metadata.json`)
-
-| Mức rủi ro | Ngưỡng điểm |
-|---|---|
-| Cao (high) | <= 616 |
-| Trung bình (medium) | 617 — 643 |
-| Thấp (low) | > 643 |
-
-### Thông tin artifact
-
-- Model version: `lgbm_tuned`
-- Pipeline file: `App/BE/artifacts/lgbm_pipeline.pkl`
-- Metadata config: `App/BE/artifacts/metadata.json`
-- 22 features đầu vào mô hình, trong đó có 4 biến categorical được mã hóa
+*Quyết định kỹ thuật & kinh doanh*:
+Mặc dù `loan_grade` có tương quan phân loại rất mạnh, biến số này **bị loại bỏ hoàn toàn khỏi mô hình học máy** nhằm ngăn chặn hiện tượng **rò rỉ dữ liệu (Target / Data Leakage)** — vì trên thực tế hạng tín dụng này được phê chuẩn dựa trên quy trình hậu kiểm hoặc thông tin sau khi khoản vay phát sinh. Mục tiêu của mô hình Machine Learning mới là tạo ra **Incremental Lift (Giá trị dự báo bổ sung)** độc lập hoàn toàn từ các biến hành vi và tài chính nguyên bản.
 
 ---
 
-## API Endpoints
+### 2.5 Điểm Nóng Bất Định (Uncertainty Hotspot) — Nhóm MORTGAGE
 
-Sau khi khởi chạy backend, tài liệu API đầy đủ có tại `http://127.0.0.1:8000/docs`
+Kiểm định phân tích sai số (Chi-square, Odds Ratio, Standardized Residuals) phát hiện một nghịch lý:
+- Nhóm khách hàng đang có khoản vay mua nhà thế chấp (`MORTGAGE`) có tỷ lệ vỡ nợ tổng thể thấp (**12.6%**).
+- Tuy nhiên, mô hình lại ghi nhận **tỷ lệ Dương tính giả (False Positive Rate) cao bất thường** tại nhóm này (mô hình dự đoán rủi ro cao nhưng thực tế khách hàng vẫn thanh toán tốt).
 
-| Method | Endpoint | Mô tả | Xác thực |
-|---|---|---|---|
-| GET | `/health` | Kiểm tra trạng thái server và trạng thái model | Không yêu cầu |
-| POST | `/api/predict` | Gửi hồ sơ tín dụng, nhận kết quả đánh giá | Không yêu cầu |
-| GET | `/api/history` | Lấy danh sách lịch sử đánh giá (mặc định 100 bản ghi) | Có yêu cầu |
-| DELETE | `/api/history` | Xóa toàn bộ lịch sử đánh giá | Yêu cầu `X-Admin-Key` header |
-| POST | `/api/auth/register` | Đăng ký tài khoản người dùng mới | Không yêu cầu |
-| POST | `/api/auth/login` | Đăng nhập và nhận Access Token (JWT) | Không yêu cầu |
-| GET | `/api/auth/me` | Truy xuất thông tin tài khoản hiện tại | Yêu cầu JWT |
-| GET | `/api/admin/users` | Lấy danh sách toàn bộ người dùng hệ thống | Yêu cầu JWT (Admin) |
+*Kết luận phân tích*: Đây không phải lỗi thuật toán mà là hiện tượng **thiên lệch do thiếu biến quan sát (Omitted Variable Bias)**. Bộ dữ liệu hiện tại không chứa các trường thông tin về: giá trị thẩm định bất động sản, tỷ lệ dư nợ trên giá trị tài sản (LTV - Loan-to-Value) hay thâm niên chi trả mortgage. Điều này đưa ra khuyến nghị chiến lược: **Không phụ thuộc 100% vào điểm số tự động đối với nhóm MORTGAGE ở vùng ranh giới**, mà cần duy trì kênh thẩm định có sự can thiệp của chuyên viên.
 
 ---
 
-## Yêu Cầu Hệ Thống
+### 2.6 Quản Trị Chất Lượng Dữ Liệu (Data Quality & Governance)
 
-Để chạy dự án cục bộ, cần cài đặt trước các công cụ sau:
-
-| Công cụ | Phiên bản tối thiểu | Ghi chú |
+| Vấn đề phát hiện trong EDA | Tính chất dữ liệu | Phương án xử lý chuẩn mực |
 |---|---|---|
-| Python | 3.11+ | Dùng cho Backend và Notebooks |
-| Node.js | 18+ | Dùng cho Frontend |
-| npm | 9+ | Đi kèm Node.js |
-| PostgreSQL | 14+ | Có thể dùng local hoặc cloud (Supabase, Render) |
+| Thiếu dữ liệu thâm niên làm việc (`person_emp_length`) | Missing Not At Random (MNAR) — người thất nghiệp hoặc lao động tự do ngại khai báo | Không dùng Mean/Median Imputation đơn giản; gán cờ `emp_length_missing = 1` để mô hình học chính ý nghĩa của việc thiếu dữ liệu |
+| Thiếu dữ liệu lãi suất (`loan_int_rate`) | Missing At Random (MAR) | Điền trung vị theo từng phân khúc và bổ sung cờ `loan_int_rate_missing` |
+| Trùng lặp thông tin giữa `loan_to_income_ratio` và `loan_percent_income` | Đa cộng tuyến cao | Hợp nhất và chuẩn hóa tính toán trong pipeline tiền xử lý |
 
+---
+
+## 3. Business Decisions & Credit Policy
+
+Chuyển hóa trực tiếp các phát hiện dữ liệu thành **chiến lược và quy tắc vận hành kinh doanh (Data-to-Policy Action Matrix)**:
+
+```
+                  ┌─────────────────────────────────────────────────────────┐
+                  │                 BỘ DỮ LIỆU LỊCH SỬ                      │
+                  └──────────────────────────┬──────────────────────────────┘
+                                             │
+                                             ▼
+                 ┌───────────────────────────────────────────────────────────┐
+                 │                INSIGHTS TỪ PHÂN TÍCH (EDA)                │
+                 │  • RENT & Debt Consolidation rủi ro cao (31.6%, 28.6%)    │
+                 │  • Điểm gãy rủi ro xuất hiện rõ rệt tại PTI >= 25%        │
+                 │  • Rủi ro đồng nhất giữa các quốc gia US / UK / Canada    │
+                 │  • MORTGAGE có tỷ lệ False Positive cao do thiếu LTV      │
+                 │  • Khách hàng có nợ xấu cũ có tỷ lệ vỡ nợ gấp đôi (37.8%) │
+                 └───────────────────────────┬───────────────────────────────┘
+                                             │
+                                             ▼
+                 ┌───────────────────────────────────────────────────────────┐
+                 │                QUYẾT ĐỊNH KINH DOANH CỤ THỂ               │
+                 │  1. Khung phê duyệt 3 cấp độ (Approve / Review / Reject)  │
+                 │  2. Áp trần cứng PTI 25% toàn hệ thống                    │
+                 │  3. Áp dụng Policy Overlays theo từng phân khúc mục đích  │
+                 │  4. Chính sách tín dụng xuyên biên giới nhất quán         │
+                 │  5. Cơ chế thẩm định kép (Human-in-the-loop) cho MORTGAGE │
+                 │  6. Bắt buộc cung cấp Reason Codes minh bạch cho từ chối  │
+                 └───────────────────────────────────────────────────────────┘
+```
+
+| # | Phát hiện từ Dữ liệu | Quyết định Kinh doanh & Chính sách Tín dụng | Cơ chế Thực thi trên Hệ thống |
+|---|---|---|---|
+| **1** | Xác suất vỡ nợ (PD) phân phối liên tục, khó xác định một điểm cắt nhị phân duy nhất | **Xây dựng khung quyết định 3 tầng**: Tự động duyệt (STP), Chuyên viên thẩm định (Manual Underwriting) và Từ chối thẳng | Thiết lập 2 ngưỡng điểm cắt (`HIGH_RISK_MAX = 616`, `MEDIUM_RISK_MAX = 643`) |
+| **2** | Tỷ lệ nghĩa vụ nợ (PTI) của nhóm vỡ nợ vượt 24.7% (+10 pp so với nhóm tốt) | **Thiết lập trần chính sách PTI 25%**: Không tự động phê duyệt khoản vay nếu nghĩa vụ nợ hàng tháng vượt 25% thu nhập; đề xuất giảm hạn mức hoặc tăng kỳ hạn vay | Kích hoạt cảnh báo `RULE_HIGH_PTI` và tự động điều chuyển hồ sơ sang trạng thái REVIEW |
+| **3** | Phân khúc RENT (31.6%), Vay hợp nhất nợ (28.6%), Vay y tế (26.7%) có tỷ lệ nợ xấu cao | **Áp dụng Policy Overlays theo phân khúc**: Tăng cường kiểm soát rủi ro có mục tiêu thay vì siết hạn mức toàn danh mục (gây mất thị phần) | Nhóm RENT/Consolidation yêu cầu xác minh thu nhập 6 tháng gần nhất; nhóm vay sửa nhà/y tế yêu cầu hóa đơn |
+| **4** | Tỷ lệ vỡ nợ không có sự khác biệt giữa US (21.8%), UK (21.9%) và Canada (21.7%) | **Chuẩn hóa chính sách chung (Cross-Border Harmonization)**: Không phân biệt đối xử theo vị trí địa lý của khách hàng | Sử dụng chung một bảng điểm tín dụng, loại bỏ hoàn toàn biến địa lý khỏi mô hình để tuân thủ pháp lý |
+| **5** | Khách hàng MORTGAGE có tỷ lệ False Positive cao do thiếu biến thế chấp | **Bảo vệ nhóm khách hàng tiềm năng an toàn**: Không tự động từ chối hồ sơ MORTGAGE nằm ở vùng ranh giới điểm số | Chuyển hồ sơ sang thẩm định viên để bổ sung thông tin định giá tài sản và xác định tỷ lệ LTV thực tế |
+| **6** | Lịch sử nợ xấu (`cb_person_default_on_file = Y`) đẩy xác suất vỡ nợ lên 37.8% | **Chốt chặn lịch sử tín dụng**: Khách hàng có nợ xấu cũ không được hưởng quy trình duyệt tự động dù thu nhập cao | Gán nhãn cảnh báo đỏ `RULE_PRIOR_DEFAULT`, trừ điểm phạt trong scorecard |
+
+---
+
+## 4. Machine Learning: Credit Scoring & Risk Tiering
+
+### 4.1 Scoring Pipeline Architecture
+
+Hệ thống chuyển đổi toàn diện từ dữ liệu thô sang điểm số và quyết định theo chu trình khép kín:
+
+```
+[Hồ sơ khách hàng (16 trường dữ liệu đầu vào)]
+                    │
+                    ▼
+[Feature Engineering Pipeline (22 đặc trưng mô hình)]
+  • Biến đổi Log-transform: person_income_log, other_debt_log
+  • Tỷ số tài chính: debt_to_income_ratio, loan_to_income_ratio
+  • Chỉ báo chất lượng: emp_length_missing, loan_int_rate_missing, high_loan_burden_flag
+  • Mã hóa hạng mục (Categorical Encoding)
+                    │
+                    ▼
+[Mô hình LightGBM Classifier (predict_proba)] ──► Xác suất vỡ nợ PD ∈ [0, 1]
+                    │
+                    ▼
+[Log-Odds Scorecard Scaling] ──────────────────► Điểm tín dụng Credit Score ∈ [300, 850]
+                    │
+                    ▼
+[Phân tầng Rủi ro (Risk Tier Engine)] ──────────► HIGH / MEDIUM / LOW
+                    │
+                    ▼
+[Business Rules Engine & Reason Codes] ────────► Quyết định (APPROVE / REVIEW / REJECT)
+                                                 + Khuyến nghị hành động cụ thể
+```
+
+---
+
+### 4.2 FICO-Standard Log-Odds Scoring Formula
+
+Thay vì trả về xác suất thô (Probability of Default - PD) khó giải thích cho người dùng cuối và chuyên viên, hệ thống áp dụng công thức chuyển đổi **Log-Odds chuẩn công nghiệp tín dụng (tương tự thang điểm FICO 300–850)**:
+
+$$\text{Odds} = \frac{1 - \text{PD}}{\text{PD}}$$
+
+$$\text{Factor} = \frac{\text{PDO}}{\ln(2)}$$
+
+$$\text{Score} = \text{BaseScore} + \text{Factor} \times \ln(\text{Odds})$$
+
+**Thông số cấu hình chuẩn (`App/BE/artifacts/metadata.json`):**
+- $\text{BaseScore} = 600$ (tương ứng tại $\text{Odds} = 1:1$, tức $\text{PD} = 50\%$)
+- $\text{PDO} = 20$ (Points to Double the Odds: Cứ mỗi 20 điểm tăng thêm, tỷ lệ trả nợ tốt tăng gấp đôi)
+- $\text{ScoreMin} = 300$, $\text{ScoreMax} = 850$
+
+---
+
+### 4.3 Three-Tier Decision Framework
+
+| Quyết định | Khoảng Điểm | Mức Rủi Ro | Hành Động & Cơ Chế Xử Lý Nghiệp Vụ |
+|---|---|---|---|
+| 🟢 **APPROVE** | **> 643** | Rủi ro Thấp (Low Risk) | **Phê duyệt thẳng (Straight-Through Processing)**. Khoản vay đủ điều kiện giải ngân tự động với lãi suất ưu đãi tiêu chuẩn. |
+| 🟡 **REVIEW** | **617 – 643** | Rủi ro Trung Bình (Medium Risk) | **Chuyển chuyên viên tín dụng thẩm định bổ sung**. Hệ thống đính kèm danh sách cảnh báo (Risk Flags) để chuyên viên đàm phán giảm hạn mức hoặc tăng kỳ hạn vay. |
+| 🔴 **REJECT** | **≤ 616** | Rủi ro Cao (High Risk) | **Từ chối cấp tín dụng tự động**. Hệ thống sinh văn bản thông báo từ chối kèm mã nguyên nhân chính (Adverse Action Notice). |
+
+---
+
+### 4.4 Khả Năng Giải Trình & Reason Codes
+
+Hệ thống giải quyết triệt để bài toán "Hộp đen (Black-box)" trong AI bằng việc tích hợp **Bộ sinh mã nguyên nhân rủi ro (Reason Codes Engine)**:
+- `REASON_HIGH_DTI`: Tỷ lệ tổng nợ trên thu nhập vượt ngưỡng an toàn.
+- `REASON_HIGH_PTI`: Nghĩa vụ trả nợ hàng tháng chiếm tỷ trọng quá lớn trong thu nhập.
+- `REASON_PRIOR_DEFAULT`: Khách hàng có lịch sử ghi nhận nợ xấu trong quá khứ.
+- `REASON_PAST_DELINQUENCIES`: Từng có lịch sử chậm trả lãi/gốc.
+- `REASON_HIGH_CREDIT_UTILIZATION`: Tỷ lệ sử dụng hạn mức thẻ tín dụng ở mức báo động (> 80%).
+
+Mỗi mã lý do được hệ thống đa ngôn ngữ hóa (i18n) hiển thị trực tiếp trên giao diện người dùng bằng tiếng Việt và tiếng Anh, giúp khách hàng hiểu rõ nguyên nhân và chuyên viên có căn cứ giải trình trước kiểm toán độc lập.
+
+---
+
+## 5. Model Evaluation & Reliability
+
+### 5.1 Performance Benchmark
+
+Hiệu năng mô hình được kiểm định nghiêm ngặt trên tập kiểm thử độc lập (Test Set):
+
+| Chỉ Số Đánh Giá | Logistic Regression (Baseline) | LightGBM (Champion) | Ý Nghĩa Nghiệp Vụ Trong Ngân Hàng |
+|---|---|---|---|
+| **ROC-AUC** | 0.8607 | **0.9431** | Năng lực phân biệt tổng thể giữa hồ sơ tốt và hồ sơ xấu trên toàn dải điểm |
+| **PR-AUC** | 0.7214 | **0.8916** | **Thước đo cốt lõi**: Khả năng nhận diện chính xác nợ xấu trong điều kiện mẫu mất cân bằng |
+| **KS Statistic** | 58.40 | **73.08** | Độ tách biệt phân phối tích lũy giữa 2 nhóm (tiêu chuẩn ngân hàng yêu cầu KS > 40) |
+| **Gini Coefficient** | 0.7214 | **0.8862** | Sức mạnh phân hóa tiêu chuẩn trong xây dựng Credit Scorecard ($2 \times \text{AUC} - 1$) |
+| **F1-Score** | 0.7021 | **0.8415** | Điểm hài hòa giữa khả năng bắt nợ xấu (Recall) và độ chuẩn xác (Precision) |
+
+---
+
+### 5.2 Kỹ Thuật Thẩm Định & Đảm Bảo Độ Tin Cậy
+
+1. **Tối ưu siêu tham số Bayesian (Optuna)**: Sử dụng thuật toán `TPESampler` kết hợp cơ chế cắt tỉa nhánh kém hiệu quả `MedianPruner`, tối ưu hóa trực tiếp hàm mục tiêu **PR-AUC** qua 50 trials với 5-Fold Stratified Cross-Validation.
+2. **Kiểm tra tính đơn điệu (Monotonicity Check)**: Phân tích 10 phân vị điểm số (Decile Analysis) xác nhận: Điểm tín dụng tăng thì tỷ lệ nợ xấu thực tế giảm liên tục 100%, không xảy ra hiện tượng đảo chiều rủi ro.
+3. **Thực nghiệm mất cân bằng (SMOTE-NC vs `scale_pos_weight`)**: Thực nghiệm chỉ ra SMOTE-NC làm tăng khoảng cách sai lệch giữa tập huấn luyện và kiểm thử (Overfitting gap). Do đó, kỹ thuật gán trọng số lớp tự nhiên `scale_pos_weight` của LightGBM được lựa chọn làm giải pháp tối ưu.
+4. **Hiệu chỉnh xác suất (Probability Calibration)**: Phân tích độ dốc hiệu chuẩn phát hiện việc sử dụng trọng số lớp làm dịch chuyển nhẹ giá trị kỳ vọng PD (~0.31 so với mức nền 0.22). Hệ thống khuyến nghị áp dụng `CalibratedClassifierCV` (Isotonic/Sigmoid) khi tổ chức muốn sử dụng xác suất này cho bài toán định giá khoản vay theo rủi ro (Risk-Based Pricing).
+
+---
+
+## 6. Power BI Dashboard
+
+Tệp báo cáo quản trị chuyên sâu [`Power BI/risk.pbix`](Power%20BI/risk.pbix) cung cấp góc nhìn toàn cảnh phục vụ Hội đồng Quản trị rủi ro và Giám đốc Khối Tín dụng:
+
+- **Portfolio Quality Tracking**: Theo dõi phân phối điểm tín dụng của toàn bộ danh mục theo thời gian thực.
+- **Underwriting Conversion Funnel**: Đo lường tỷ lệ Phê duyệt / Xem xét / Từ chối theo từng nhóm khách hàng và chi nhánh.
+- **Segment Risk Deep-Dive**: Cắt lớp rủi ro đa chiều theo mục đích vay, loại hình cư trú, hình thức việc làm và trình độ học vấn.
+- **Model Drift & Early Warning**: Giám sát xu hướng dịch chuyển xác suất vỡ nợ bình quân theo từng tháng, phát hiện sớm dấu hiệu suy giảm chất lượng danh mục để kích hoạt tái huấn luyện mô hình.
+
+---
+
+## 7. System Architecture & Deployment
+
+Hệ thống được thiết kế theo kiến trúc Microservices hiện đại, tách biệt hoàn toàn giữa tầng giao diện, dịch vụ xử lý nghiệp vụ và cơ sở dữ liệu:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    CLIENT LAYER (Vercel)                    │
+│  Next.js 16 (React 19) • TypeScript • Tailwind CSS • i18n   │
+│  - Giao diện thẩm định hồ sơ vay trực quan                  │
+│  - Tra cứu lịch sử & giải trình điểm số                     │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               │ HTTPS / JSON API (JWT Auth)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   BACKEND LAYER (Render)                    │
+│             FastAPI • Uvicorn • Pydantic v2                 │
+│  ┌───────────────────────────┬───────────────────────────┐  │
+│  │   Authentication Service  │   Credit Scoring Service  │  │
+│  │   (JWT, Bcrypt, Roles)    │   (Scoring Pipeline)      │  │
+│  └───────────────────────────┴─────────────┬─────────────┘  │
+│                                            │                │
+│                                            ▼                │
+│                              ┌───────────────────────────┐  │
+│                              │   ML Inference Engine     │  │
+│                              │   LightGBM + Preprocessor│  │
+│                              │   Artifacts: metadata.json│  │
+│                              └───────────────────────────┘  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               │ SQLAlchemy 2.0 ORM
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     DATABASE (PostgreSQL)                   │
+│  - Bảng users: Quản lý người dùng và phân quyền RBAC        │
+│  - Bảng predictions: Lưu trữ hồ sơ thẩm định & Audit Trail  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 8. Quick Start & Local Development
+
+### Yêu cầu môi trường:
+- Python >= 3.10
+- Node.js >= 18.0.0 & npm >= 9.0.0
+- PostgreSQL (Cài đặt cục bộ hoặc sử dụng Supabase / Neon Cloud)
+
+### Bước 1 — Khởi chạy Backend (FastAPI)
 
 ```bash
-# Cài đặt toàn bộ thư viện Python (Backend + ML + Notebooks)
-pip install -r requirements.txt
-
-# Cài đặt thư viện Frontend (Node.js)
-cd App/FE && npm install
-```
-
----
-
-## Hướng Dẫn Khởi Chạy
-
-### Bước 1 — Cấu hình và khởi chạy Backend (FastAPI)
-
-**1. Di chuyển vào thư mục Backend:**
-```bash
+# 1. Di chuyển vào thư mục Backend
 cd App/BE
-```
 
-**2. Tạo và kích hoạt môi trường ảo (Virtual Environment):**
-```bash
-# Tạo venv (chỉ cần làm lần đầu)
+# 2. Khởi tạo môi trường ảo Python
 python -m venv venv
 
-# Kích hoạt — PowerShell (Windows)
+# Kích hoạt môi trường ảo:
+# Windows (PowerShell):
 .\venv\Scripts\Activate.ps1
-
-# Kích hoạt — Command Prompt (Windows)
+# Windows (cmd):
 .\venv\Scripts\activate.bat
-
-# Kích hoạt — Linux / macOS
+# Linux / macOS:
 source venv/bin/activate
-```
 
-**3. Cài đặt thư viện Python:**
-```bash
+# 3. Cài đặt các thư viện phụ thuộc
 pip install -r requirements.txt
+
+# 4. Cấu hình biến môi trường
+# Tạo file .env từ file mẫu:
+cp .env.example .env
+# Chỉnh sửa thông tin DATABASE_URL và JWT Secret phù hợp trong .env
+
+# 5. Khởi chạy máy chủ API
+uvicorn main:app --reload --port 8000
 ```
-
-**4. Cấu hình biến môi trường:**
-
-Tạo file `.env` trong thư mục `App/BE` (copy từ `.env.example` và điền giá trị phù hợp):
-```env
-PORT=8000
-DATABASE_URL=postgresql://nova_user:your_password@localhost:5432/nova_bank
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
-ADMIN_API_KEY=your_secret_admin_key
-```
-
-**5. Khởi chạy server:**
-```bash
-uvicorn main:app --reload
-```
-
-Sau khi khởi chạy thành công:
-- API Backend: `http://127.0.0.1:8000`
-- Swagger UI (tài liệu API tương tác): `http://127.0.0.1:8000/docs`
-- ReDoc (tài liệu API thay thế): `http://127.0.0.1:8000/redoc`
+- Swagger API Docs: `http://localhost:8000/docs`
+- Health Check: `http://localhost:8000/health`
 
 ---
 
-### Bước 2 — Cấu hình và khởi chạy Frontend (Next.js)
+### Bước 2 — Khởi chạy Frontend (Next.js)
 
-**1. Mở Terminal mới, di chuyển vào thư mục Frontend:**
 ```bash
+# 1. Mở terminal mới, di chuyển vào thư mục Frontend
 cd App/FE
-```
 
-**2. Cài đặt các gói Node.js:**
-```bash
+# 2. Cài đặt các gói Node.js
 npm install
-```
 
-**3. Cấu hình biến môi trường:**
+# 3. Cấu hình biến môi trường
+# Tạo file .env.local trong App/FE với nội dung:
+echo 'NEXT_PUBLIC_API_URL=http://localhost:8000' > .env.local
 
-Tạo file `.env.local` trong thư mục `App/FE`:
-```env
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-```
-
-**4. Khởi chạy Frontend ở chế độ phát triển:**
-```bash
+# 4. Khởi chạy giao diện phát triển
 npm run dev
 ```
-
-Ứng dụng sẽ chạy tại: `http://localhost:3000` (hoặc `3001` nếu cổng `3000` bị chiếm dụng).
+- Truy cập giao diện ứng dụng tại: `http://localhost:3000`
 
 ---
 
-### Bước 3 — Chạy Jupyter Notebooks (Tùy chọn)
+### Bước 3 — Khám phá và Tái huấn luyện Mô hình (Jupyter Notebooks)
 
-Dành cho việc tái huấn luyện mô hình hoặc phân tích dữ liệu:
+Để khám phá dữ liệu hoặc tinh chỉnh mô hình, khởi chạy môi trường phân tích:
 
 ```bash
-# Cài đặt các thư viện phân tích dữ liệu
-pip install jupyter lightgbm scikit-learn pandas numpy matplotlib seaborn imbalanced-learn optuna
+# Cài đặt công cụ Jupyter
+pip install jupyter
 
-# Khởi chạy Jupyter Notebook
+# Khởi động Jupyter Notebook
 jupyter notebook
 ```
 
-Thứ tự chạy notebook được đề xuất:
-1. `notebooks/1data_understanding.ipynb` — Khám phá và hiểu cấu trúc dữ liệu
-2. `notebooks/2EDA.ipynb` — Phân tích khám phá chuyên sâu
-3. `notebooks/testsmote.ipynb` — Xử lý mất cân bằng lớp bằng SMOTE
-4. `notebooks/model.ipynb` — Huấn luyện, tối ưu và đánh giá mô hình
+**Thứ tự các notebook phân tích:**
+1. [`notebooks/data_understanding.ipynb`](notebooks/data_understanding.ipynb): Khám phá cấu trúc dữ liệu, phân phối và kiểm tra tính toàn vẹn.
+2. [`notebooks/EDA.ipynb`](notebooks/EDA.ipynb): Phân tích khám phá chuyên sâu, kiểm định giả thuyết và trích xuất insights kinh doanh.
+3. [`notebooks/model.ipynb`](notebooks/model.ipynb): Huấn luyện Baseline, xử lý mất cân bằng, tối ưu hóa siêu tham số bằng Optuna và xuất Artifacts.
+4. [`notebooks/powerBi.ipynb`](notebooks/powerBi.ipynb): Tiền xử lý dữ liệu và tạo bảng tổng hợp phục vụ trực quan hóa Power BI.
 
 ---
 
-## Cơ Sở Dữ Liệu
+## 9. Project Structure
 
-### Schema bảng `users`
-
-Bảng quản lý tài khoản người dùng và phân quyền:
-
-| Cột | Kiểu dữ liệu | Mô tả |
-|---|---|---|
-| id | INTEGER | Khóa chính, tự tăng |
-| email | VARCHAR | Email đăng nhập (độc nhất) |
-| full_name | VARCHAR | Họ và tên người dùng |
-| hashed_password | VARCHAR | Mật khẩu đã được mã hóa (bcrypt) |
-| role | VARCHAR | Vai trò người dùng (`admin` hoặc `user`) |
-| is_active | BOOLEAN | Trạng thái hoạt động của tài khoản |
-
-### Schema bảng `predictions`
-
-Bảng chính lưu toàn bộ lịch sử đánh giá, liên kết với `users`:
-
-| Cột | Kiểu dữ liệu | Mô tả |
-|---|---|---|
-| id | INTEGER | Khóa chính, tự tăng |
-| person_age | INTEGER | Tuổi người vay |
-| person_income | FLOAT | Thu nhập hàng năm |
-| loan_amnt | FLOAT | Số tiền vay đề xuất |
-| loan_intent | VARCHAR(50) | Mục đích vay |
-| loan_term_months | INTEGER | Kỳ hạn vay (tháng) |
-| has_prior_default | INTEGER | Từng vỡ nợ (0 = Không, 1 = Có) |
-| person_emp_length | FLOAT | Số năm kinh nghiệm làm việc |
-| education_level | VARCHAR(50) | Trình độ học vấn |
-| employment_type | VARCHAR(50) | Loại hình việc làm |
-| person_home_ownership | VARCHAR(50) | Hình thức cư trú |
-| loan_int_rate | FLOAT | Lãi suất khoản vay |
-| cb_person_cred_hist_length | FLOAT | Số năm lịch sử tín dụng |
-| open_accounts | INTEGER | Số tài khoản đang mở |
-| past_delinquencies | INTEGER | Số lần trễ hạn |
-| credit_utilization_ratio | FLOAT | Tỷ lệ sử dụng hạn mức tín dụng |
-| other_debt | FLOAT | Nợ khác hiện tại |
-| credit_score | INTEGER | Điểm tín dụng kết quả (300–850) |
-| risk_tier | VARCHAR(20) | Mức rủi ro (high / medium / low) |
-| decision | VARCHAR(20) | Quyết định (APPROVE / REVIEW / REJECT) |
-| probability_of_default | FLOAT | Xác suất vỡ nợ (0.0–1.0) |
-| top_reasons | JSON | Danh sách khuyến nghị và lý do rủi ro |
-| created_at | TIMESTAMP | Thời điểm tạo bản ghi |
-
-Database tự động khởi tạo bảng và thực hiện migration cột mới khi Backend khởi động (thông qua SQLAlchemy + `ALTER TABLE`).
-
-### Scripts SQL
-
-Xem các file trong thư mục `sql/` để thiết lập cơ sở dữ liệu:
-- `schema star.sql` — Tạo Star Schema cho Data Warehouse (fact + dimension tables)
-- `create base view.sql` — Tạo view tổng hợp cơ bản
-- `VIEW POWERBI.sql` — Views chuyên dụng cho kết nối Power BI
-- `check_data.sql` — Queries kiểm tra chất lượng và toàn vẹn dữ liệu
-- `summary queries.sql` — Các truy vấn tổng hợp dùng trong báo cáo
+```
+NovaBank_CreditRisk/
+│
+├── App/
+│   ├── BE/                          # FastAPI Backend Engine
+│   │   ├── api/                     # REST API Route Endpoints (auth, predict, history...)
+│   │   ├── artifacts/               # Model Pipeline & Metadata (metadata.json, pipeline.joblib)
+│   │   ├── database/                # SQLAlchemy Models, Engine & Session Configuration
+│   │   ├── domain/                  # Pydantic Schemas & DTOs
+│   │   ├── ml/                      # Predictor & Feature Transformer Interfaces
+│   │   ├── repository/              # Data Access Layer (Users, Predictions)
+│   │   ├── service/                 # Business Logic & Authentication Services
+│   │   ├── main.py                  # FastAPI Application Entrypoint
+│   │   ├── scoring.py               # FICO Scorecard & Reason Codes Logic
+│   │   └── requirements.txt         # Backend Python Dependencies
+│   │
+│   └── FE/                          # Next.js 16 Web Client
+│       ├── public/                  # Static Assets & Icons
+│       ├── src/
+│       │   ├── app/                 # App Router Pages ([locale]/apply, login, history...)
+│       │   ├── components/          # Reusable UI Components (Navbar, Forms, Gauge...)
+│       │   ├── lib/                 # API Clients & Utility Functions
+│       │   └── messages/            # Internationalization Translations (en.json, vi.json)
+│       └── package.json             # Frontend Dependencies & Scripts
+│
+├── notebooks/                       # Data Science & Analytics Notebooks
+│   ├── data_understanding.ipynb     # Phase 1: Data Understanding & Profiling
+│   ├── EDA.ipynb                    # Phase 2: Exploratory Data Analysis & Business Insights
+│   ├── model.ipynb                  # Phase 3: Model Training, Tuning & Evaluation
+│   ├── powerBi.ipynb                # Phase 4: Data Preparation for BI
+│   └── preprocessors.py             # Custom Sklearn Transformers
+│
+├── Power BI/
+│   └── risk.pbix                    # Interactive Executive Power BI Report
+│
+├── raw_data/
+│   └── Credit Risk Data.csv         # Core Dataset (32,581 loan records)
+│
+├── requirements.txt                 # Global Analytics Dependencies
+├── README.md                        # Comprehensive Project Documentation
+└── .gitignore                       # Git Ignore Rules
+```
 
 ---
 
-## Phân Tích Dữ Liệu & Power BI
+## 10. Limitations & Future Roadmap
 
-Dashboard Power BI (`Power BI/risk.pbix`) kết nối trực tiếp với PostgreSQL thông qua các views được định nghĩa trong `sql/VIEW POWERBI.sql`, cung cấp:
+Mặc dù hệ thống đã đạt hiệu năng và độ ổn định cao, dự án vẫn ghi nhận các định hướng nâng cấp trong tương lai:
 
-- Tổng quan phân phối điểm tín dụng theo thời gian
-- Tỷ lệ phê duyệt / xem xét / từ chối theo nhóm khách hàng
-- Phân tích rủi ro theo mục đích vay, trình độ học vấn, loại hình việc làm
-- Biểu đồ xu hướng xác suất vỡ nợ trung bình theo tháng
-
-Để chuẩn bị dữ liệu cho Power BI, chạy notebook `notebooks/3powerBi.ipynb`.
+1. **Bổ sung dữ liệu tài sản thế chấp (LTV Integration)**: Thu thập thêm giá trị định giá tài sản và số tiền thế chấp ban đầu nhằm xóa bỏ điểm mù (Uncertainty Hotspot) đối với nhóm khách hàng vay mua nhà `MORTGAGE`.
+2. **Giải thích cục bộ theo thời gian thực bằng SHAP**: Tích hợp thuật toán TreeSHAP vào trực tiếp API Backend để xuất giá trị đóng góp Shapley Value cho từng thuộc tính của riêng từng hồ sơ.
+3. **Hệ thống giám sát trôi dữ liệu tự động (Automated PSI/CSI)**: Thiết lập pipeline tự động tính toán chỉ số ổn định dân số (Population Stability Index - PSI) và độ suy thoái đặc trưng (Characteristic Stability Index - CSI) theo tuần; tự động gửi thông báo khi PSI > 0.25 để tái huấn luyện mô hình.
+4. **Tích hợp dữ liệu vĩ mô (Macroeconomic Scenarios)**: Đưa các chỉ số kinh tế vĩ mô (lãi suất cơ bản ngân hàng trung ương, CPI, tỷ lệ thất nghiệp theo quý) vào mô hình Stress Testing danh mục theo các kịch bản suy thoái.
 
 ---
 
-*NovaBank CreditRisk — Built with FastAPI, Next.js, LightGBM & PostgreSQL*
+*NovaBank CreditRisk — End-to-End Credit Risk Analytics & Machine Learning Decision Pipeline*  
+*Developed with FastAPI, LightGBM, Next.js, PostgreSQL & Power BI*
