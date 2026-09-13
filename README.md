@@ -2,180 +2,299 @@
 
 > **Live Web Application**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)  
 > **Interactive API Documentation (Swagger)**: [https://credit-risk-prediction-7nxt.onrender.com/docs](https://credit-risk-prediction-7nxt.onrender.com/docs)  
-> **Tech Stack**: FastAPI · LightGBM · Next.js 16 · PostgreSQL · Power BI · Scikit-Learn
+> **Executive Power BI Report**: `Power BI/risk.pbix`  
+> **Tech Stack**: FastAPI · LightGBM · Next.js 16 · PostgreSQL · Power BI · Scikit-Learn · Optuna
 
-Hệ thống phân tích rủi ro tín dụng tiêu dùng toàn diện dựa trên dữ liệu lịch sử (**32,581 hồ sơ vay, 29 biến đặc trưng**, tỷ lệ vỡ nợ nền 21.8%). Dự án tích hợp đầy đủ chu trình phân tích dữ liệu thực tế tại các định chế tài chính: từ **khám phá dữ liệu (EDA)**, **đúc kết insight & thiết kế chính sách tín dụng (Business Policy)**, **mô hình hóa rủi ro & chấm điểm tín dụng (Machine Learning & Credit Scoring)** đến **xây dựng Dashboard quản trị danh mục (Power BI)** và **ứng dụng web phê duyệt hồ sơ theo thời gian thực**.
+Dự án phân tích rủi ro tín dụng tiêu dùng và xây dựng hệ thống thẩm định khoản vay tự động dựa trên danh mục **32,581 hồ sơ tín dụng** trên toàn cầu (Mỹ, Anh, Canada). Dự án tích hợp hoàn chỉnh chu trình phân tích dữ liệu định chế tài chính: từ **khám phá dữ liệu chuyên sâu (EDA)**, **đúc kết insight kinh doanh (Business Insights)**, **thiết kế chính sách tín dụng & phân tầng rủi ro (Credit Policy)**, **mô hình hóa học máy (Machine Learning & FICO Scorecard)** đến **xây dựng Dashboard điều hành (Power BI)** và **ứng dụng Web phê duyệt thời gian thực**.
 
 ---
 
 ## Mục Lục / Table of Contents
 
-- [1. Business Context & Problem Statement](#1-business-context--problem-statement)
+- [1. Business Context & Stakeholder Framework](#1-business-context--stakeholder-framework)
+  - [1.1 Bối Cảnh & Thách Thức Nghiệp Vụ](#11-bối-cảnh--thách-thức-nghiệp-vụ)
+  - [1.2 Ma Trận Chuyển Giao Cho Các Bên Liên Quan (Stakeholder Delivery)](#12-ma-trận-chuyển-giao-cho-các-bên-liên-quan-stakeholder-delivery)
+  - [1.3 Tổng Quan Dữ Liệu & Chỉ Số Hoạt Động Cốt Lõi (Portfolio KPIs)](#13-tổng-quan-dữ-liệu--chỉ-số-hoạt-động-cốt-lõi-portfolio-kpis)
 - [2. Key Insights from Exploratory Data Analysis (EDA)](#2-key-insights-from-exploratory-data-analysis-eda)
-  - [2.1 Portfolio Landscape & Geographic Neutrality](#21-portfolio-landscape--geographic-neutrality)
-  - [2.2 Risk Concentration by Segment & Loan Purpose](#22-risk-concentration-by-segment--loan-purpose)
-  - [2.3 Payment-to-Income (PTI) — Thước Đo Căng Thẳng Dòng Tiền](#23-payment-to-income-pti--thước-đo-căng-thẳng-dòng-tiền)
-  - [2.4 Phân Hạng Tín Dụng Hiện Hữu & Bài Toán Data Leakage](#24-phân-hạng-tín-dụng-hiện-hữu--bài-toán-data-leakage)
-  - [2.5 Điểm Nóng Bất Định (Uncertainty Hotspot) — Nhóm MORTGAGE](#25-điểm-nóng-bất-định-uncertainty-hotspot--nhóm-mortgage)
-  - [2.6 Quản Trị Chất Lượng Dữ Liệu (Data Quality & Governance)](#26-quản-trị-chất-lượng-dữ-liệu-data-quality--governance)
-- [3. Business Decisions & Credit Policy](#3-business-decisions--credit-policy)
+  - [2.1 Portfolio Landscape & Tính Trung Lập Địa Lý](#21-portfolio-landscape--tính-trung-lập-địa-lý)
+  - [2.2 Phân Tích Đường Cong Tuổi & Vòng Đời Khách Hàng (U-Shaped Risk Curve)](#22-phân-tích-đường-cong-tuổi--vòng-đời-khách-hàng-u-shaped-risk-curve)
+  - [2.3 Hình Thức Cư Trú & Cơ Chế Đệm Tài Sản (Housing Buffer)](#23-hình-thức-cư-trú--cơ-chế-đệm-tài-sản-housing-buffer)
+  - [2.4 Nghịch Lý Loại Hình Việc Làm (Employment Paradox)](#24-nghịch-lý-loại-hình-việc-làm-employment-paradox)
+  - [2.5 Phân Cấp Mục Đích Vay & Tín Hiệu Căng Thẳng Thanh Khoản](#25-phân-cấp-mục-đích-vay--tín-hiệu-căng-thẳng-thanh-khoản)
+  - [2.6 Vùng Nguy Hiểm Của Đòn Bẩy (DTI & LTI Danger Zones)](#26-vùng-nguy-hiểm-của-đòn-bẩy-dti--lti-danger-zones)
+  - [2.7 Hành Vi Tín Dụng & Nghịch Lý Thâm Niên (Credit History Paradox)](#27-hành-vi-tín-dụng--nghịch-lý-thâm-niên-credit-history-paradox)
+  - [2.8 Khủng Hoảng Hạng Tín Dụng Grade G & Vấn Đề Data Leakage](#28-khủng-hoảng-hạng-tín-dụng-grade-g--vấn-đề-data-leakage)
+  - [2.9 Điểm Nóng Bất Định (Uncertainty Hotspot) — Nhóm MORTGAGE](#29-điểm-nóng-bất-định-uncertainty-hotspot--nhóm-mortgage)
+- [3. Business Decisions & Phased Strategic Roadmap](#3-business-decisions--phased-strategic-roadmap)
+  - [3.1 Ma Trận Hành Động Từ Dữ Liệu (Data-to-Policy Matrix)](#31-ma-trận-hành-động-từ-dữ-liệu-data-to-policy-matrix)
+  - [3.2 Lộ Trình Triển Khai Chiến Lược Theo Giai Đoạn](#32-lộ-trình-triển-khai-chiến-lược-theo-giai-đoạn)
 - [4. Machine Learning: Credit Scoring & Risk Tiering](#4-machine-learning-credit-scoring--risk-tiering)
   - [4.1 Scoring Pipeline Architecture](#41-scoring-pipeline-architecture)
-  - [4.2 FICO-Standard Log-Odds Scoring Formula](#42-fico-standard-log-odds-scoring-formula)
-  - [4.3 Three-Tier Decision Framework](#43-three-tier-decision-framework)
-  - [4.4 Khả Năng Giải Trình & Reason Codes](#44-khả-năng-giải-trình--reason-codes)
+  - [4.2 Chuẩn Hóa Thang Điểm Tín Dụng FICO (300–850)](#42-chuẩn-hóa-thang-điểm-tín-dụng-fico-300850)
+  - [4.3 Khung Ra Quyết Định 3 Tầng (Three-Tier Decision Framework)](#43-khung-ra-quyết-định-3-tầng-three-tier-decision-framework)
+  - [4.4 Khả Năng Giải Trình Minh Bạch & Reason Codes](#44-khả-năng-giải-trình-minh-bạch--reason-codes)
 - [5. Model Evaluation & Reliability](#5-model-evaluation--reliability)
   - [5.1 Performance Benchmark](#51-performance-benchmark)
-  - [5.2 Kỹ Thuật Thẩm Định & Đảm Bảo Độ Tin Cậy](#52-kỹ-thuật-thẩm-định--đảm-bảo-độ-tin-cậy)
-- [6. Power BI Dashboard](#6-power-bi-dashboard)
-- [7. System Architecture & Deployment](#7-system-architecture--deployment)
+  - [5.2 Kỹ Thuật Thẩm Định Mô Hình Tiêu Chuẩn Ngân Hàng](#52-kỹ-thuật-thẩm-định-mô-hình-tiêu-chuẩn-ngân-hàng)
+- [6. Power BI Executive Dashboard](#6-power-bi-executive-dashboard)
+- [7. System Architecture & Tech Stack](#7-system-architecture--tech-stack)
 - [8. Quick Start & Local Development](#8-quick-start--local-development)
 - [9. Project Structure](#9-project-structure)
 - [10. Limitations & Future Roadmap](#10-limitations--future-roadmap)
 
 ---
 
-## 1. Business Context & Problem Statement
+## 1. Business Context & Stakeholder Framework
 
-Trong hoạt động cho vay tiêu dùng bán lẻ, các ngân hàng truyền thống đối mặt với tình thế tiến thoái lưỡng nan kinh điển: **tối đa hóa tăng trưởng tín dụng** đồng thời **kiểm soát tỷ lệ nợ xấu (NPL)** trong ngưỡng an toàn vốn.
+### 1.1 Bối Cảnh & Thách Thức Nghiệp Vụ
 
-Các phương pháp xét duyệt truyền thống dựa trên bộ quy tắc tĩnh (rule-based) hoặc thẩm định trực quan của chuyên viên tín dụng bộc lộ nhiều hạn chế:
-- **Tốc độ xử lý chậm**: Hồ sơ mất nhiều ngày để đối soát và ra quyết định.
-- **Tính chủ quan và thiếu nhất quán**: Các chuyên viên khác nhau đưa ra phán quyết khác nhau đối với cùng một mức độ rủi ro.
-- **Không định lượng được rủi ro cận biên**: Quy tắc cứng 'đạt/không đạt' loại trừ các khách hàng tiềm năng ở vùng ranh giới hoặc chấp thuận khách hàng ẩn chứa rủi ro dòng tiền phức tạp.
+Trong hoạt động cho vay tiêu dùng bán lẻ, Nova Bank đối mặt với bài toán tối ưu hóa danh mục: **mở rộng khả năng tiếp cận tín dụng công bằng cho khách hàng** nhưng phải **ngăn chặn tối đa tổn thất tài chính do nợ xấu (NPL)**. 
 
-**Mục tiêu của dự án:**
-1. **Định lượng xác suất vỡ nợ (Probability of Default - PD)** của từng hồ sơ vay cá nhân bằng các thuật toán học máy tiên tiến.
-2. **Khai phá các động lực rủi ro cốt lõi (Key Risk Drivers)** từ dữ liệu lịch sử để làm căn cứ tái thiết kế chính sách cấp tín dụng.
-3. **Chuyển hóa PD thành thang điểm tín dụng chuẩn hóa 300–850** (FICO standard) kết hợp phân nhóm rủi ro 3 cấp (*Approve / Review / Reject*) kèm mã lý do giải trình minh bạch.
-4. **Triển khai ứng dụng hoàn chỉnh (End-to-End)**: Cung cấp giao diện web cho chuyên viên tín dụng thao tác nhập liệu thời gian thực và Dashboard Power BI cho cấp quản lý giám sát sức khỏe danh mục.
+Phương pháp xét duyệt truyền thống bộc lộ những rủi ro trọng yếu:
+- **Xét duyệt thủ công & Rule-based**: Chậm chạp, chi phí vận hành cao, thiếu linh hoạt trước các hồ sơ phức tạp.
+- **Tính chủ quan**: Khác biệt trong quyết định giữa các chuyên viên thẩm định với cùng một mức độ rủi ro.
+- **Không định lượng rủi ro biên**: Quy tắc cứng nhị phân (Đạt / Không đạt) bỏ lỡ các khách hàng tốt ở biên điểm hoặc phê duyệt nhầm các hồ sơ có rủi ro dòng tiền tiềm ẩn.
 
-**Nguồn dữ liệu**: `raw_data/Credit Risk Data.csv` gồm **32,581 bản ghi khoản vay** tại 3 thị trường phát triển (Mỹ, Anh, Canada). Biến mục tiêu là `loan_status` (0 = trả nợ đúng hạn, 1 = vỡ nợ / quá hạn nghiêm trọng).
+---
+
+### 1.2 Ma Trận Chuyển Giao Cho Các Bên Liên Quan (Stakeholder Delivery)
+
+Phân tích được định hướng nhằm phục vụ trực tiếp 4 nhóm quyết định chiến lược trong ngân hàng:
+
+| Nhóm Đối Tượng (Stakeholders) | Nhu Cầu & Mục Tiêu Trọng Tâm | Sản Phẩm Bàn Giao Từ Dự Án |
+|---|---|---|
+| **Hội Đồng Quản Trị Rủi Ro** *(Risk Management Committee)* | Giám sát mức độ tập trung rủi ro toàn danh mục, thiết lập khẩu vị rủi ro (Risk Appetite) và kiểm soát NPL. | Báo cáo phân bổ rủi ro theo phân khúc, ma trận tổn thất tiềm năng và cảnh báo các "điểm nóng" (Hotspots). |
+| **Khối Vận Hành Cho Vay** *(Lending Operations Team)* | Tối ưu hóa quy trình phê duyệt, rút ngắn thời gian xử lý (Turnaround Time), giảm can thiệp thủ công. | Hệ thống chấm điểm tự động (Scorecard), ngưỡng cắt 3 tầng (*Approve/Review/Reject*) và mã lý do giải trình (*Reason Codes*). |
+| **Ban Lãnh Đạo Điều Hành** *(Executive Leadership)* | Đo lường hiệu quả kinh doanh, cân đối tăng trưởng doanh thu với an toàn vốn. | KPI Dashboard tổng quan, phân tích tăng trưởng theo thị trường và mô hình định giá điều chỉnh theo rủi ro (*Risk-Adjusted Pricing*). |
+| **Phòng Phát Triển Sản Phẩm** *(Product Development)* | Tinh chỉnh gói vay, lãi suất và điều kiện vay phù hợp từng chân dung khách hàng. | Đề xuất gói vay chuyên biệt theo độ tuổi (Senior Products), điều chỉnh lãi suất theo mục đích vay (+2% đảo nợ, -1% giáo dục). |
+
+---
+
+### 1.3 Tổng Quan Dữ Liệu & Chỉ Số Hoạt Động Cốt Lõi (Portfolio KPIs)
+
+Bộ dữ liệu gồm **32,581 khoản vay** trên 3 quốc gia (USA, UK, Canada) với 29 thuộc tính đa chiều:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                          NOVA BANK PORTFOLIO HEALTH CHECK                              │
+├───────────────────────┬────────────────────────┬───────────────────────────────────────┤
+│ Tổng Khoản Vay        │ Tỷ Lệ Nợ Xấu Tổng Thể  │ Tỷ Lệ An Toàn / Rủi Ro                │
+│ 32,581 hồ sơ          │ 21.82%                 │ 78.18% An Toàn : 21.82% Rủi Ro (3.6:1)│
+├───────────────────────┼────────────────────────┼───────────────────────────────────────┤
+│ Giá Trị Vay Trung Bình│ Thu Nhập Trung Bình    │ Tỷ Số Vay / Thu Nhập (LTI Trung Bình) │
+│ $9.59K                │ $66.07K / năm          │ 0.17 (Tối ưu trong ngân hàng)         │
+├───────────────────────┼────────────────────────┼───────────────────────────────────────┤
+│ Nhóm An Toàn (Safe)   │ Thu nhập: $70.8K       │ Khoản vay: $9.2K  │ Lãi suất: 6.10%   │
+│ Nhóm Rủi Ro (Risky)   │ Thu nhập: $49.1K       │ Khoản vay: $10.9K │ Lãi suất: 8.13%   │
+└───────────────────────┴────────────────────────┴───────────────────────────────────────┘
+```
+
+> **So sánh chuẩn ngành**: Tỷ lệ nợ xấu 21.82% nằm trong biên độ tiêu chuẩn ngành cho vay tín chấp bán lẻ (18% – 25%). Tỷ lệ phân bổ 3.6 khách hàng an toàn trên 1 khách hàng rủi ro (78.18% vs 21.82%) phản ánh nền tảng danh mục cân bằng nhưng cần siết chặt phân tầng rủi ro.
 
 ---
 
 ## 2. Key Insights from Exploratory Data Analysis (EDA)
 
-> Quá trình phân tích chuyên sâu được thực nghiệm chi tiết tại notebook [`notebooks/EDA.ipynb`](notebooks/EDA.ipynb).
+> Mã nguồn phân tích chi tiết và kiểm định thống kê nằm tại [`notebooks/EDA.ipynb`](notebooks/EDA.ipynb).
 
-### 2.1 Portfolio Landscape & Geographic Neutrality
+### 2.1 Portfolio Landscape & Tính Trung Lập Địa Lý
 
-- **Tỷ lệ nợ xấu nền (Baseline Default Rate)**: Đạt **21.8%** (7,108 / 32,581 khoản vay). Đây là bài toán mất cân bằng lớp (tỷ lệ xấp xỉ 4:1), do đó **PR-AUC (Precision-Recall AUC)** và **F1-Score** được lựa chọn làm thước đo chính thay cho Accuracy (vốn có thể gây ngộ nhận về hiệu năng).
-- **Đặc trưng phân phối**: Các biến tài chính cốt lõi như thu nhập hàng năm (`person_income`) và số tiền xin vay (`loan_amnt`) có phân phối lệch phải mạnh (right-skewed), chứa các giá trị ngoại lai cực lớn → Cần xử lý bằng phép biến đổi logarit (`np.log1p`) trước khi đưa vào mô hình.
-- **Tính trung lập về địa lý (Geographic Invariance)**: Tỷ lệ vỡ nợ gần như tương đồng tuyệt đối giữa 3 thị trường:
-  - Hoa Kỳ (US): **21.8%**
-  - Vương quốc Anh (UK): **21.9%**
-  - Canada: **21.7%**
-  
-  *Insight nghiệp vụ*: Rủi ro tín dụng tiêu dùng **không xuất phát từ sự khác biệt quốc gia**, mà bị chi phối bởi các chỉ số tài chính cá nhân vi mô. Điều này cho phép tổ chức áp dụng một **khung chính sách tín dụng và mô hình chấm điểm thống nhất** trên toàn cầu mà không lo ngại thiên vị địa lý hay vi phạm quy định chống phân biệt đối xử (Fair Lending Compliance).
+Phân tích tỷ lệ nợ xấu theo từng thị trường quốc tế ghi nhận sự đồng nhất đáng kinh ngạc:
+- **Hoa Kỳ (USA)**: **21.86%**
+- **Vương Quốc Anh (UK)**: **21.73%**
+- **Canada**: **21.86%**
 
----
-
-### 2.2 Risk Concentration by Segment & Loan Purpose
-
-Phân tích tỷ lệ vỡ nợ theo từng phân khúc khách hàng so với tỷ lệ nền danh mục (21.8%):
-
-| Phân khúc / Đặc điểm hồ sơ | Tỷ lệ vỡ nợ | Độ lệch so với nền | Đánh giá rủi ro |
-|---|---|---|---|
-| Có tiền sử nợ xấu (`cb_person_default_on_file = Y`) | **37.8%** | **+16.0 pp** | **Nguy cơ cao nhất** |
-| Đang thuê nhà (`RENT`) | **31.6%** | **+9.8 pp** | Rủi ro rất cao |
-| Vay hợp nhất nợ (`DEBTCONSOLIDATION`) | **28.6%** | **+6.8 pp** | Căng thẳng thanh khoản |
-| Vay chi phí y tế khẩn cấp (`MEDICAL`) | **26.7%** | **+4.9 pp** | Chi tiêu ngoài dự kiến |
-| Vay sửa chữa nhà cửa (`HOMEIMPROVEMENT`) | **26.1%** | **+4.3 pp** | Rủi ro trung bình cao |
-| Vay học tập, giáo dục (`EDUCATION`) | **17.2%** | **-4.6 pp** | Rủi ro thấp |
-| Vay đầu tư kinh doanh / mạo hiểm (`VENTURE`) | **14.8%** | **-7.0 pp** | Rủi ro thấp |
-| Đang vay mua nhà thế chấp (`MORTGAGE`) | **12.6%** | **-9.2 pp** | Khá an toàn |
-| Đã sở hữu nhà hoàn toàn (`OWN`) | **7.5%** | **-14.3 pp** | **An toàn nhất** |
-
-**Bản chất kinh tế (Economic Mechanisms):**
-1. **Đệm tài sản phòng ngừa (Home-Equity Buffer)**: Người sở hữu nhà (`OWN`, tỷ lệ vỡ nợ chỉ 7.5%) có nền tảng tích lũy tài sản vững chắc để vượt qua các biến cố tài chính ngắn hạn. Ngược lại, người đi thuê nhà (`RENT`, 31.6%) chịu áp lực kép từ chi phí sinh hoạt cố định và thiếu hụt tài sản dự phòng.
-2. **Tín hiệu đảo nợ (Rollover Debt Signal)**: Khách hàng vay hợp nhất nợ (`DEBTCONSOLIDATION`) thường đã rơi vào tình trạng bội chi hoặc sử dụng đòn bẩy quá mức từ trước; khoản vay mới thường chỉ trì hoãn việc mất khả năng thanh toán thay vì giải quyết gốc rễ.
-3. **Cú sốc thanh khoản thụ động**: Vay y tế (`MEDICAL`) là dạng chi tiêu bắt buộc phát sinh ngoài kế hoạch, thường đi kèm với việc gián đoạn thu nhập lao động do vấn đề sức khỏe.
-
----
-
-### 2.3 Payment-to-Income (PTI) — Thước Đo Căng Thẳng Dòng Tiền
-
-Phân tích định lượng khẳng định tỷ lệ nghĩa vụ nợ trên thu nhập (PTI / `loan_percent_income`) là biến số có sức mạnh phân loại rủi ro vượt trội:
-
-| Trạng thái khoản vay | PTI Trung bình | Độ lệch |
-|---|---|---|
-| Người vay trả nợ tốt (Non-Default) | **14.9%** | Vùng an toàn dòng tiền |
-| Người vay vỡ nợ (Default) | **24.7%** | **+9.8 pp** (Chênh lệch ~10 điểm %) |
-
-*Insight đột phá*: Khách hàng vỡ nợ không nhất thiết là người có thu nhập thấp tuyệt đối, mà là người có **biên độ an toàn dòng tiền (Cashflow Buffer) bị triệt tiêu**. Khi nghĩa vụ nợ hàng tháng tiếp cận và vượt qua mốc **25% thu nhập**, người vay mất hoàn toàn khả năng co giãn chi tiêu trước các biến cố lạm phát, phát sinh chi phí y tế hoặc sụt giảm tiền thưởng. Ngưỡng **PTI 25%** chính là cơ sở định lượng để thiết lập chốt chặn chính sách (Policy Hard Cap).
-
----
-
-### 2.4 Phân Hạng Tín Dụng Hiện Hữu & Bài Toán Data Leakage
-
-Hệ thống phân hạng nội bộ truyền thống (`loan_grade`) ghi nhận sự gia tăng rủi ro đơn điệu:
-$$\text{Grade A: } 9.9\% \longrightarrow \text{B: } 16.3\% \longrightarrow \text{C: } 20.7\% \longrightarrow \text{D: } 59.0\% \longrightarrow \text{E: } 64.4\% \longrightarrow \text{F: } 70.5\% \longrightarrow \text{G: } 98.4\%$$
-
-*Quyết định kỹ thuật & kinh doanh*:
-Mặc dù `loan_grade` có tương quan phân loại rất mạnh, biến số này **bị loại bỏ hoàn toàn khỏi mô hình học máy** nhằm ngăn chặn hiện tượng **rò rỉ dữ liệu (Target / Data Leakage)** — vì trên thực tế hạng tín dụng này được phê chuẩn dựa trên quy trình hậu kiểm hoặc thông tin sau khi khoản vay phát sinh. Mục tiêu của mô hình Machine Learning mới là tạo ra **Incremental Lift (Giá trị dự báo bổ sung)** độc lập hoàn toàn từ các biến hành vi và tài chính nguyên bản.
-
----
-
-### 2.5 Điểm Nóng Bất Định (Uncertainty Hotspot) — Nhóm MORTGAGE
-
-Kiểm định phân tích sai số (Chi-square, Odds Ratio, Standardized Residuals) phát hiện một nghịch lý:
-- Nhóm khách hàng đang có khoản vay mua nhà thế chấp (`MORTGAGE`) có tỷ lệ vỡ nợ tổng thể thấp (**12.6%**).
-- Tuy nhiên, mô hình lại ghi nhận **tỷ lệ Dương tính giả (False Positive Rate) cao bất thường** tại nhóm này (mô hình dự đoán rủi ro cao nhưng thực tế khách hàng vẫn thanh toán tốt).
-
-*Kết luận phân tích*: Đây không phải lỗi thuật toán mà là hiện tượng **thiên lệch do thiếu biến quan sát (Omitted Variable Bias)**. Bộ dữ liệu hiện tại không chứa các trường thông tin về: giá trị thẩm định bất động sản, tỷ lệ dư nợ trên giá trị tài sản (LTV - Loan-to-Value) hay thâm niên chi trả mortgage. Điều này đưa ra khuyến nghị chiến lược: **Không phụ thuộc 100% vào điểm số tự động đối với nhóm MORTGAGE ở vùng ranh giới**, mà cần duy trì kênh thẩm định có sự can thiệp của chuyên viên.
-
----
-
-### 2.6 Quản Trị Chất Lượng Dữ Liệu (Data Quality & Governance)
-
-| Vấn đề phát hiện trong EDA | Tính chất dữ liệu | Phương án xử lý chuẩn mực |
-|---|---|---|
-| Thiếu dữ liệu thâm niên làm việc (`person_emp_length`) | Missing Not At Random (MNAR) — người thất nghiệp hoặc lao động tự do ngại khai báo | Không dùng Mean/Median Imputation đơn giản; gán cờ `emp_length_missing = 1` để mô hình học chính ý nghĩa của việc thiếu dữ liệu |
-| Thiếu dữ liệu lãi suất (`loan_int_rate`) | Missing At Random (MAR) | Điền trung vị theo từng phân khúc và bổ sung cờ `loan_int_rate_missing` |
-| Trùng lặp thông tin giữa `loan_to_income_ratio` và `loan_percent_income` | Đa cộng tuyến cao | Hợp nhất và chuẩn hóa tính toán trong pipeline tiền xử lý |
-
----
-
-## 3. Business Decisions & Credit Policy
-
-Chuyển hóa trực tiếp các phát hiện dữ liệu thành **chiến lược và quy tắc vận hành kinh doanh (Data-to-Policy Action Matrix)**:
+Ở cấp độ thành phố lớn, độ biến thiên cũng rất thấp:
+- Vancouver: 24.19% (cao nhất)
+- Dallas: 23.59%
+- Edinburgh: 23.46%
+- Los Angeles: 22.85%
+- Glasgow: 21.56% (thấp nhất)
 
 ```
-                  ┌─────────────────────────────────────────────────────────┐
-                  │                 BỘ DỮ LIỆU LỊCH SỬ                      │
-                  └──────────────────────────┬──────────────────────────────┘
-                                             │
-                                             ▼
-                 ┌───────────────────────────────────────────────────────────┐
-                 │                INSIGHTS TỪ PHÂN TÍCH (EDA)                │
-                 │  • RENT & Debt Consolidation rủi ro cao (31.6%, 28.6%)    │
-                 │  • Điểm gãy rủi ro xuất hiện rõ rệt tại PTI >= 25%        │
-                 │  • Rủi ro đồng nhất giữa các quốc gia US / UK / Canada    │
-                 │  • MORTGAGE có tỷ lệ False Positive cao do thiếu LTV      │
-                 │  • Khách hàng có nợ xấu cũ có tỷ lệ vỡ nợ gấp đôi (37.8%) │
-                 └───────────────────────────┬───────────────────────────────┘
-                                             │
-                                             ▼
-                 ┌───────────────────────────────────────────────────────────┐
-                 │                QUYẾT ĐỊNH KINH DOANH CỤ THỂ               │
-                 │  1. Khung phê duyệt 3 cấp độ (Approve / Review / Reject)  │
-                 │  2. Áp trần cứng PTI 25% toàn hệ thống                    │
-                 │  3. Áp dụng Policy Overlays theo từng phân khúc mục đích  │
-                 │  4. Chính sách tín dụng xuyên biên giới nhất quán         │
-                 │  5. Cơ chế thẩm định kép (Human-in-the-loop) cho MORTGAGE │
-                 │  6. Bắt buộc cung cấp Reason Codes minh bạch cho từ chối  │
-                 └───────────────────────────────────────────────────────────┘
+[USA: 21.86%] ───┐
+[UK:  21.73%] ───┼──► Độ lệch tối đa chỉ 0.13 pp! 
+[CAN: 21.86%] ───┘    Rủi ro mang tính ĐỒNG NHẤT XUYÊN BIÊN GIỚI
 ```
 
-| # | Phát hiện từ Dữ liệu | Quyết định Kinh doanh & Chính sách Tín dụng | Cơ chế Thực thi trên Hệ thống |
+*Insight Chiến Lược*: Rủi ro vỡ nợ **không phụ thuộc vào vị trí địa lý** mà chịu sự chi phối hoàn toàn của các chỉ số tài chính cá nhân vi mô. Điều này chứng minh mô hình quản trị rủi ro và thuật toán chấm điểm của Nova Bank có khả năng **chuyển giao và mở rộng trực tiếp sang các thị trường nói tiếng Anh tương đồng (như Úc, New Zealand, Ireland)** mà không cần thay đổi cấu trúc nền tảng.
+
+---
+
+### 2.2 Phân Tích Đường Cong Tuổi & Vòng Đời Khách Hàng (U-Shaped Risk Curve)
+
+Tỷ lệ nợ xấu phân bổ theo độ tuổi tạo thành **đường cong chữ U (U-shaped curve)** rõ rệt:
+
+```
+Tỷ lệ vỡ nợ (%)
+  30% │         * (61-70 tuổi: 29.82%) - Cực đại rủi ro!
+      │        /
+  25% │  *    /
+      │ (20-30: 22.21%)
+  20% │        \      * (41-50: 20.40%) - Điểm ngọt (Sweet Spot)
+      └───────────────────────────────────► Độ tuổi
+```
+
+- **Độ tuổi 20–30 (Rủi ro trung bình cao - 22.21%)**: Giai đoạn đầu sự nghiệp, thu nhập chưa ổn định, thiếu tài sản tích lũy và thói quen quản lý chi tiêu chưa hoàn thiện.
+- **Độ tuổi 41–50 (Vùng an toàn lý tưởng - 20.40%)**: Giai đoạn thu nhập đạt đỉnh (Peak Earning Years), ổn định sự nghiệp và tích lũy tài sản vững chắc nhất.
+- **Độ tuổi 61–70 (Vùng rủi ro cao nhất - 29.82%)**: Thu nhập cố định sau nghỉ hưu giảm sút, trong khi chi phí y tế và chăm sóc sức khỏe gia tăng đột biến, gây áp lực thanh khoản nặng nề.
+
+---
+
+### 2.3 Hình Thức Cư Trú & Cơ Chế Đệm Tài Sản (Housing Buffer)
+
+Hình thức cư trú là một trong những chỉ báo phân loại rủi ro mạnh nhất:
+
+| Hình Thức Cư Trú | Tỷ Lệ Nợ Xấu | So Với Mức Nền (21.8%) | Đánh Giá Tín Dụng |
 |---|---|---|---|
-| **1** | Xác suất vỡ nợ (PD) phân phối liên tục, khó xác định một điểm cắt nhị phân duy nhất | **Xây dựng khung quyết định 3 tầng**: Tự động duyệt (STP), Chuyên viên thẩm định (Manual Underwriting) và Từ chối thẳng | Thiết lập 2 ngưỡng điểm cắt (`HIGH_RISK_MAX = 616`, `MEDIUM_RISK_MAX = 643`) |
-| **2** | Tỷ lệ nghĩa vụ nợ (PTI) của nhóm vỡ nợ vượt 24.7% (+10 pp so với nhóm tốt) | **Thiết lập trần chính sách PTI 25%**: Không tự động phê duyệt khoản vay nếu nghĩa vụ nợ hàng tháng vượt 25% thu nhập; đề xuất giảm hạn mức hoặc tăng kỳ hạn vay | Kích hoạt cảnh báo `RULE_HIGH_PTI` và tự động điều chuyển hồ sơ sang trạng thái REVIEW |
-| **3** | Phân khúc RENT (31.6%), Vay hợp nhất nợ (28.6%), Vay y tế (26.7%) có tỷ lệ nợ xấu cao | **Áp dụng Policy Overlays theo phân khúc**: Tăng cường kiểm soát rủi ro có mục tiêu thay vì siết hạn mức toàn danh mục (gây mất thị phần) | Nhóm RENT/Consolidation yêu cầu xác minh thu nhập 6 tháng gần nhất; nhóm vay sửa nhà/y tế yêu cầu hóa đơn |
-| **4** | Tỷ lệ vỡ nợ không có sự khác biệt giữa US (21.8%), UK (21.9%) và Canada (21.7%) | **Chuẩn hóa chính sách chung (Cross-Border Harmonization)**: Không phân biệt đối xử theo vị trí địa lý của khách hàng | Sử dụng chung một bảng điểm tín dụng, loại bỏ hoàn toàn biến địa lý khỏi mô hình để tuân thủ pháp lý |
-| **5** | Khách hàng MORTGAGE có tỷ lệ False Positive cao do thiếu biến thế chấp | **Bảo vệ nhóm khách hàng tiềm năng an toàn**: Không tự động từ chối hồ sơ MORTGAGE nằm ở vùng ranh giới điểm số | Chuyển hồ sơ sang thẩm định viên để bổ sung thông tin định giá tài sản và xác định tỷ lệ LTV thực tế |
-| **6** | Lịch sử nợ xấu (`cb_person_default_on_file = Y`) đẩy xác suất vỡ nợ lên 37.8% | **Chốt chặn lịch sử tín dụng**: Khách hàng có nợ xấu cũ không được hưởng quy trình duyệt tự động dù thu nhập cao | Gán nhãn cảnh báo đỏ `RULE_PRIOR_DEFAULT`, trừ điểm phạt trong scorecard |
+| **Sở hữu nhà hoàn toàn (OWN)** | **7.47%** | **-14.35 pp** | **Phân khúc vàng (Premium Segment)** |
+| **Đang trả nợ thế chấp (MORTGAGE)** | **12.57%** | **-9.25 pp** | Rất an toàn, đáng tin cậy |
+| **Đang thuê nhà (RENT)** | **31.57%** | **+9.75 pp** | **Phân khúc rủi ro cao nhất** |
+
+*Cơ chế kinh tế (Home-Equity Buffer)*:
+- Người sở hữu nhà (`OWN`) có tài sản ròng lớn, đóng vai trò là "đệm chống sốc" giúp họ vượt qua biến cố tài chính mà không phá vỡ nghĩa vụ nợ.
+- Người thuê nhà (`RENT`) chiếm tỷ trọng hồ sơ lớn nhất nhưng tỷ lệ nợ xấu lên tới **31.57%** (gấp 4.2 lần nhóm sở hữu nhà). Áp lực tiền thuê cố định hàng tháng khiến họ dễ rơi vào cảnh mất khả năng trả nợ khi thu nhập bị gián đoạn ngắn hạn.
+
+---
+
+### 2.4 Nghịch Lý Loại Hình Việc Làm (Employment Paradox)
+
+Trái ngược với giả định truyền thống, loại hình hợp đồng lao động **không tạo ra sự phân hóa rủi ro đáng kể**:
+
+| Loại Hình Việc Làm | Tỷ Lệ Nợ Xấu | Đánh Giá So Sánh |
+|---|---|---|
+| **Thất nghiệp (Unemployed)** | 22.67% | Nhóm rủi ro cao theo kỳ vọng |
+| **Kinh doanh tự do (Self-employed)** | 22.49% | Rủi ro tương đương nhóm toàn thời gian! |
+| **Làm việc bán thời gian (Part-time)** | 21.63% | Tương đồng mức nền danh mục |
+| **Làm việc toàn thời gian (Full-time)** | 21.57% | Mức chuẩn cơ sở |
+
+*Insight Nghiệp Vụ Quan Trọng*: Phán đoán tín dụng chỉ dựa trên hình thức việc làm là **không đủ và dễ gây sai lệch**. Năng lực thanh toán nợ thực tế (Debt Service Capacity), tỷ lệ nợ trên thu nhập và độ co giãn dòng tiền mới là các yếu tố dự báo rủi ro mang tính quyết định.
+
+---
+
+### 2.5 Phân Cấp Mục Đích Vay & Tín Hiệu Căng Thẳng Thanh Khoản
+
+Tỷ lệ nợ xấu có sự phân cấp rõ nét theo mục đích sử dụng vốn:
+
+```
+1. Vay Hợp Nhất Nợ (Debt Consolidation) ──► 28.59%  [RỦI RO CAO NHẤT: Bội chi & đảo nợ]
+2. Vay Y Tế (Medical Expenses)           ──► 26.70%  [Sốc chi tiêu khẩn cấp, ngoài kế hoạch]
+3. Sửa Chữa Nhà (Home Improvement)       ──► 26.10%  [Chi tiêu tùy ý, dễ phát sinh bội chi]
+4. Vay Cá Nhân Tiêu Dùng (Personal)      ──► 19.89%  [Rủi ro mức độ vừa phải]
+5. Vay Học Tập (Education)               ──► 17.22%  [Đầu tư tương lai, khả năng trả nợ tốt]
+6. Vay Kinh Doanh Mạo Hiểm (Venture)     ──► 14.31%  [AN TOÀN NHẤT: Có kế hoạch sinh lời]
+```
+
+- **Hợp nhất nợ (28.59%)**: Khách hàng tìm đến gói vay này khi đã có nhiều khoản nợ từ trước. Đây thường là tín hiệu "đảo nợ" (Rollover Debt) của một chu kỳ tài chính đang trên bờ vực sụp đổ.
+- **Chi phí y tế (26.70%)**: Khủng hoảng tài chính thụ động, thường đi kèm với việc người vay bị giảm sút khả năng lao động.
+- **Kinh doanh mạo hiểm (14.31%) & Giáo dục (17.22%)**: Khoản vay có mục đích sinh lợi hoặc gia tăng giá trị vốn con người, khách hàng có sự chuẩn bị và ý thức trả nợ cao nhất.
+
+---
+
+### 2.6 Vùng Nguy Hiểm Của Đòn Bẩy (DTI & LTI Danger Zones)
+
+Phân tích định lượng đã làm sáng tỏ các điểm gãy rủi ro (Risk Cliff) khi khách hàng sử dụng đòn bẩy quá mức:
+
+#### Tỷ số Khoản Vay Trên Thu Nhập (Loan-to-Income - LTI):
+- LTI từ `0.00 – 0.10`: Tỷ lệ vỡ nợ chỉ **11.21%** (Cho vay thận trọng).
+- LTI từ `0.20 – 0.30`: Tỷ lệ vỡ nợ đạt **22.09%** (Mức rủi ro cân bằng).
+- LTI từ `0.70 – 0.80`: Tỷ lệ vỡ nợ vọt lên **87.50%** (**Vùng nguy hiểm tuyệt đối**).
+
+#### Tỷ số Nghĩa Vụ Trả Nợ Trên Thu Nhập (Payment-to-Income / DTI):
+- Khách hàng trả nợ tốt có PTI trung bình là **14.9%**.
+- Khách hàng vỡ nợ có PTI trung bình là **24.7%** (chênh lệch gần 10 điểm phần trăm).
+- **Vùng thảm họa (Catastrophic Underwriting Failure)**: Với những hồ sơ có DTI > 0.8, tỷ lệ nợ xấu lên đến **93.33%**!
+
+*Cơ chế dòng tiền*: Khi nghĩa vụ trả nợ chiếm trên **25% thu nhập hàng tháng**, biên độ dòng tiền dự phòng bị xóa bỏ hoàn toàn. Bất kỳ một cú sốc lạm phát hoặc sự cố phát sinh nhỏ cũng đẩy người vay vào tình trạng mất khả năng thanh toán.
+
+---
+
+### 2.7 Hành Vi Tín Dụng & Nghịch Lý Thâm Niên (Credit History Paradox)
+
+#### Tác động của tiền sử nợ xấu:
+- Khách hàng không có lịch sử nợ xấu: Tỷ lệ vỡ nợ hiện tại là **18.39%**.
+- Khách hàng từng có nợ xấu (`has_prior_default = 1`): Tỷ lệ nợ xấu vọt lên **37.81%** (Cao gấp **2.06 lần**).
+
+#### Nghịch lý thâm niên tín dụng (Length of Credit History):
+- Thâm niên 0–10 năm: Tỷ lệ vỡ nợ là **20.65%**.
+- Thâm niên 25–30 năm: Tỷ lệ vỡ nợ tăng lên **28.71%**!
+- *Giải thích*: Thâm niên lịch sử tín dụng dài thường gắn liền với nhóm người vay lớn tuổi (60+), trùng khớp với nhóm thu nhập cố định bị ảnh hưởng bởi chi phí y tế và tích lũy nhiều nghĩa vụ nợ qua thời gian.
+
+#### Điểm ngọt của tỷ lệ sử dụng hạn mức (Credit Utilization Sweet Spot):
+- Tỷ lệ sử dụng 0%–10%: Nợ xấu 21.84% (hồ sơ tín dụng mỏng, ít hoạt động).
+- **Tỷ lệ sử dụng 20%–30% (Tối ưu)**: Nợ xấu **21.11%** (sử dụng tín dụng lành mạnh, dòng tiền ổn định).
+- Tỷ lệ sử dụng > 90%: Nợ xấu tăng cao (dấu hiệu cạn kiệt thanh khoản, phụ thuộc vào thẻ tín dụng).
+
+#### Số lượng tài khoản tín dụng đang mở (Open Accounts):
+- Nhóm mở 7–8 tài khoản ghi nhận tỷ lệ nợ xấu đỉnh điểm (**24.13%**) do phải xoay xở thanh toán nhiều hạn mức cùng lúc. Trong khi đó nhóm 1–2 tài khoản hoặc nhóm quản lý trên 14 tài khoản chuyên nghiệp lại duy trì tỷ lệ vỡ nợ thấp hơn (~21%).
+
+---
+
+### 2.8 Khủng Hoảng Hạng Tín Dụng Grade G & Vấn Đề Data Leakage
+
+Thống kê phân hạng truyền thống ghi nhận sự phân cực rủi ro:
+- **Grade A**: 9.96% vỡ nợ (Khách hàng cao cấp).
+- **Grade B**: 16.28% vỡ nợ.
+- **Grade C–F**: Tăng dần từ 20.73% đến 70.54%.
+- **Grade G**: Tỷ lệ vỡ nợ lên đến **98.44%**!
+
+> ⚠️ **Khủng hoảng Grade G**: Cứ 100 hồ sơ xếp hạng G thì có hơn 98 hồ sơ mất vốn. Việc tiếp tục cấp tín dụng cho nhóm này là sự thất bại trong chính sách thẩm định.
+
+*Quyết định xử lý rò rỉ dữ liệu (Target Leakage)*:
+Biến `loan_grade` bị **loại bỏ hoàn toàn khỏi mô hình Machine Learning** vì đây là nhãn phân loại nội bộ được gán sau quá trình duyệt. Mô hình ML mới đảm bảo tính độc lập khách quan và mang lại **Incremental Lift (Giá trị dự báo bổ sung)** thực sự cho ngân hàng.
+
+---
+
+### 2.9 Điểm Nóng Bất Định (Uncertainty Hotspot) — Nhóm MORTGAGE
+
+Kiểm định sai số (Standardized Residuals, Chi-square test) phát hiện nhóm `MORTGAGE` có tỷ lệ nợ xấu thực tế thấp (12.57%), nhưng mô hình lại phát sinh **tỷ lệ Dương tính giả (False Positive) cao bất thường**.
+
+*Nguyên nhân*: Do hiện tượng **Omitted Variable Bias (Thiếu biến giải thích quan trọng)** trong dữ liệu lịch sử (thiếu trường thông tin về: giá trị định giá nhà, tỷ lệ dư nợ trên tài sản LTV, vốn chủ sở hữu tích lũy). Nhận định này dẫn tới quyết định kinh doanh: **Không từ chối tự động nhóm MORTGAGE ở biên điểm**, mà thiết lập luồng thẩm định riêng có sự tham gia của con người.
+
+---
+
+## 3. Business Decisions & Phased Strategic Roadmap
+
+### 3.1 Ma Trận Hành Động Từ Dữ Liệu (Data-to-Policy Matrix)
+
+| # | Phát Hiện Từ Dữ Liệu (EDA Insight) | Quyết Định Kinh Doanh & Chính Sách Tín Dụng | Cơ Chế Thực Thi Trên Hệ Thống |
+|---|---|---|---|
+| **1** | Hạng G có tỷ lệ vỡ nợ 98.44%; DTI > 0.8 vỡ nợ 93.33% | **Đình chỉ khẩn cấp**: Cắt toàn bộ hồ sơ Grade G; áp trần cứng DTI $\le 0.6$ và PTI $\le 25\%$ | Kích hoạt bộ lọc loại trừ trực tiếp (*Hard-cut Filter*); trả về `REJECT` tức thì |
+| **2** | Nhóm RENT có tỷ lệ vỡ nợ cao (31.57%), chiếm phần lớn danh mục | **Tăng cường quy trình xác minh người thuê nhà (Enhanced Renter Protocol)**: Yêu cầu chứng minh thu nhập 6 tháng và lịch sử thanh toán tiền thuê | Điều chuyển hồ sơ sang luồng `REVIEW` nếu PTI tiệm cận 20%; yêu cầu bổ sung chứng từ |
+| **3** | Phân hóa theo mục đích vay (Hợp nhất nợ 28.59% vs Kinh doanh 14.31%) | **Định giá theo rủi ro mục đích vay (Purpose-based Pricing)**: Cộng biên độ lãi suất (+2.0% với đảo nợ; giảm 1.0% với học tập/kinh doanh) | Tự động tính toán lãi suất đề xuất dựa trên `loan_intent` trong phản hồi API |
+| **4** | Đường cong tuổi chữ U: Nhóm 61–70 tuổi có nợ xấu cao nhất (29.82%) | **Thiết kế gói vay chuyên biệt cho người cao tuổi (Senior Lending Products)**: Giảm kỳ hạn vay tối đa, yêu cầu người bảo lãnh (Co-signer) | Cảnh báo rủi ro `RULE_SENIOR_RISK` đối với khách hàng trên 60 tuổi |
+| **5** | Nhóm MORTGAGE có tỷ lệ False Positive cao do thiếu dữ liệu LTV | **Cơ chế thẩm định kép (Human-in-the-loop)**: Không tự động từ chối hồ sơ thế chấp ở vùng ranh giới | Điều chuyển sang chuyên viên thẩm định để đối soát giá trị tài sản thế chấp thực tế |
+| **6** | Tiền sử nợ xấu làm tăng nguy cơ vỡ nợ gấp 2.06 lần (37.81%) | **Chốt chặn lịch sử tín dụng**: Khách hàng có nợ xấu cũ không được hưởng quy trình duyệt tự động | Gán nhãn cờ đỏ `RULE_PRIOR_DEFAULT`, trừ điểm phạt trong scorecard |
+| **7** | Tỷ lệ nợ xấu đồng nhất giữa 3 quốc gia US, UK, Canada (~21.8%) | **Chính sách xuyên biên giới đồng nhất (Cross-border Harmonization)**: Giữ chung một scorecard và tiêu chí đánh giá | Không đưa biến quốc gia vào mô hình, đảm bảo tính công bằng và tuân thủ pháp lý |
+
+---
+
+### 3.2 Lộ Trình Triển Khai Chiến Lược Theo Giai Đoạn
+
+```
+Lộ Trình Triển Khai:
+[Giai đoạn 1: 0–30 ngày]  ──► Ứng phó khẩn cấp: Cắt bỏ Grade G & Áp trần DTI/PTI
+[Giai đoạn 2: 1–6 tháng]   ──► Tinh chỉnh sản phẩm: Định giá theo rủi ro & Xác minh nhóm RENT
+[Giai đoạn 3: 6–12 tháng]  ──► Sáng kiến mở rộng: Tận dụng mô hình sang thị trường mới
+[Giai đoạn 4: 12+ tháng]   ──► Chuyển đổi số toàn diện: Triển khai ML Serving & Cân bằng danh mục
+```
+
+#### 🚨 Giai Đoạn 1: Hành Động Khẩn Cấp (0 – 30 Ngày)
+- **Đình chỉ phê duyệt toàn bộ hồ sơ Grade G**: Ngăn chặn dòng tiền chảy vào phân khúc nợ xấu 98.44%. *(Chủ trì: Hội đồng Quản trị Rủi ro)*.
+- **Thiết lập trần cứng đòn bẩy DTI 0.6 và PTI 25%**: Ngay lập tức loại bỏ các trường hợp quá tải nợ. *(Chủ trì: Đội ngũ Thẩm định)*.
+
+#### ⚖️ Giai Đoạn 2: Tối Ưu Hóa Ngắn Hạn (1 – 6 Tháng)
+- **Quy trình thẩm định nâng cao cho người thuê nhà (RENT)**: Bổ sung yêu cầu sao kê dòng tiền và lịch sử trả tiền thuê. *(Chủ trì: Khối Vận hành Cho vay)*.
+- **Định giá theo rủi ro mục đích vay**: Tăng biên độ lãi suất bù đắp rủi ro cho vay hợp nhất nợ (+2%), ưu đãi cho vay giáo dục/kinh doanh (-1%). *(Chủ trì: Phòng Phát triển Sản phẩm)*.
+- **Gói tín dụng cá nhân hóa theo độ tuổi**: Thiết kế kỳ hạn ngắn hơn cho người cao tuổi hoặc yêu cầu đồng ký tên. *(Chủ trì: Phòng Phát triển Sản phẩm)*.
+
+#### 🌐 Giai Đoạn 3: Sáng Kiến Chiến Lược (6 – 12 Tháng)
+- **Chiến lược mở rộng quốc tế**: Triển khai khung thẩm định đã được chuẩn hóa sang các thị trường nói tiếng Anh tiềm năng (Úc, New Zealand, Ireland). *(Chủ trì: Khối Phát triển Kinh doanh)*.
+- **Định giá dựa trên mức độ sử dụng hạn mức thẻ (Utilization-based Pricing)**: Tích hợp tỷ lệ sử dụng hạn mức vào thuật toán xác định lãi suất cá nhân hóa. *(Chủ trì: Phòng Phân tích Rủi ro)*.
+
+#### 🚀 Giai Đoạn 4: Chuyển Đổi Dài Hạn (12+ Tháng)
+- **Hệ thống cảnh báo sớm & Chấm điểm Machine Learning thời gian thực**: Triển khai mô hình LightGBM tích hợp API vào toàn bộ các chi nhánh và kênh số. *(Chủ trì: Đội ngũ Data Science)*.
+- **Tái cân bằng cấu trúc danh mục**: Định hướng dịch chuyển tỷ trọng danh mục về mức tối ưu **25% Rủi ro (lãi suất cao) : 75% An toàn (nền tảng ổn định)** nhằm tối đa hóa lợi nhuận điều chỉnh theo rủi ro (Risk-Adjusted Return on Capital - RAROC). *(Chủ trì: Khối Quản lý Danh mục)*.
 
 ---
 
@@ -183,71 +302,65 @@ Chuyển hóa trực tiếp các phát hiện dữ liệu thành **chiến lư�
 
 ### 4.1 Scoring Pipeline Architecture
 
-Hệ thống chuyển đổi toàn diện từ dữ liệu thô sang điểm số và quyết định theo chu trình khép kín:
+Hệ thống xử lý dòng chảy dữ liệu khép kín từ lúc chuyên viên nhập hồ sơ tới khi đưa ra quyết định:
 
 ```
-[Hồ sơ khách hàng (16 trường dữ liệu đầu vào)]
-                    │
-                    ▼
+[Hồ sơ vay đầu vào (16 tham số tài chính & nhân khẩu học)]
+                           │
+                           ▼
 [Feature Engineering Pipeline (22 đặc trưng mô hình)]
-  • Biến đổi Log-transform: person_income_log, other_debt_log
-  • Tỷ số tài chính: debt_to_income_ratio, loan_to_income_ratio
-  • Chỉ báo chất lượng: emp_length_missing, loan_int_rate_missing, high_loan_burden_flag
-  • Mã hóa hạng mục (Categorical Encoding)
-                    │
-                    ▼
-[Mô hình LightGBM Classifier (predict_proba)] ──► Xác suất vỡ nợ PD ∈ [0, 1]
-                    │
-                    ▼
-[Log-Odds Scorecard Scaling] ──────────────────► Điểm tín dụng Credit Score ∈ [300, 850]
-                    │
-                    ▼
-[Phân tầng Rủi ro (Risk Tier Engine)] ──────────► HIGH / MEDIUM / LOW
-                    │
-                    ▼
-[Business Rules Engine & Reason Codes] ────────► Quyết định (APPROVE / REVIEW / REJECT)
-                                                 + Khuyến nghị hành động cụ thể
+  • Log-transform chống lệch: person_income_log, other_debt_log
+  • Tỷ số đòn bẩy: debt_to_income_ratio, loan_to_income_ratio
+  • Cờ dữ liệu thiếu & gánh nặng: emp_length_missing, high_loan_burden_flag
+  • Categorical Ordinal Encoding
+                           │
+                           ▼
+[Mô hình LightGBM Tuned] ──► Xác suất vỡ nợ (Probability of Default - PD)
+                           │
+                           ▼
+[Log-Odds Scorecard Scaling] ─► Điểm tín dụng Credit Score ∈ [300, 850]
+                           │
+                           ▼
+[Risk Tier Engine] ──────────► LOW / MEDIUM / HIGH
+                           │
+                           ▼
+[Business Rules Engine & Reason Codes] ──► Quyết định (APPROVE / REVIEW / REJECT)
+                                           + Mã lý do rủi ro & Khuyến nghị hành động
 ```
 
 ---
 
-### 4.2 FICO-Standard Log-Odds Scoring Formula
+### 4.2 Chuẩn Hóa Thang Điểm Tín Dụng FICO (300–850)
 
-Thay vì trả về xác suất thô (Probability of Default - PD) khó giải thích cho người dùng cuối và chuyên viên, hệ thống áp dụng công thức chuyển đổi **Log-Odds chuẩn công nghiệp tín dụng (tương tự thang điểm FICO 300–850)**:
+Thay vì chỉ trả về một xác suất phần trăm (PD) mang tính trừu tượng và khó truyền thông, hệ thống chuyển đổi trực tiếp xác suất vỡ nợ sang **thang điểm tín dụng chuẩn hóa 300–850** (tương tự chuẩn FICO quốc tế):
 
-$$\text{Odds} = \frac{1 - \text{PD}}{\text{PD}}$$
-
-$$\text{Factor} = \frac{\text{PDO}}{\ln(2)}$$
-
-$$\text{Score} = \text{BaseScore} + \text{Factor} \times \ln(\text{Odds})$$
-
-**Thông số cấu hình chuẩn (`App/BE/artifacts/metadata.json`):**
-- $\text{BaseScore} = 600$ (tương ứng tại $\text{Odds} = 1:1$, tức $\text{PD} = 50\%$)
-- $\text{PDO} = 20$ (Points to Double the Odds: Cứ mỗi 20 điểm tăng thêm, tỷ lệ trả nợ tốt tăng gấp đôi)
-- $\text{ScoreMin} = 300$, $\text{ScoreMax} = 850$
+- **Cơ chế Log-Odds (Tỷ lệ cược)**: Phản ánh tương quan trực tiếp giữa khả năng trả nợ tốt và nguy cơ vỡ nợ.
+- **Điểm neo cơ sở (Base Score = 600)**: Tương ứng với mức tỷ lệ cược cân bằng (tại xác suất vỡ nợ 50%).
+- **Hệ số nhân đôi tỷ lệ cược (PDO = 20)**: *Points to Double the Odds* — quy ước tiêu chuẩn ngành tín dụng: Cứ mỗi 20 điểm tăng thêm, tỷ lệ khách hàng trả nợ tốt tăng gấp đôi.
+- **Dải điểm chuẩn hóa (300–850)**: Giới hạn trong biên độ chuẩn ngặt từ **300 (rủi ro cao nhất)** đến **850 (uy tín tối đa)**, giúp cả người vay lẫn chuyên viên thẩm định dễ dàng hiểu và đối chiếu mức độ tín nhiệm mà không cần phải hiểu sâu về thuật toán xác suất bên dưới.
 
 ---
 
-### 4.3 Three-Tier Decision Framework
+### 4.3 Khung Ra Quyết Định 3 Tầng (Three-Tier Decision Framework)
 
-| Quyết định | Khoảng Điểm | Mức Rủi Ro | Hành Động & Cơ Chế Xử Lý Nghiệp Vụ |
+| Quyết Định Cuối Cùng | Ngưỡng Điểm | Mức Rủi Ro | Hành Động & Cơ Chế Vận Hành |
 |---|---|---|---|
-| 🟢 **APPROVE** | **> 643** | Rủi ro Thấp (Low Risk) | **Phê duyệt thẳng (Straight-Through Processing)**. Khoản vay đủ điều kiện giải ngân tự động với lãi suất ưu đãi tiêu chuẩn. |
-| 🟡 **REVIEW** | **617 – 643** | Rủi ro Trung Bình (Medium Risk) | **Chuyển chuyên viên tín dụng thẩm định bổ sung**. Hệ thống đính kèm danh sách cảnh báo (Risk Flags) để chuyên viên đàm phán giảm hạn mức hoặc tăng kỳ hạn vay. |
-| 🔴 **REJECT** | **≤ 616** | Rủi ro Cao (High Risk) | **Từ chối cấp tín dụng tự động**. Hệ thống sinh văn bản thông báo từ chối kèm mã nguyên nhân chính (Adverse Action Notice). |
+| 🟢 **APPROVE (Phê duyệt)** | **> 643** | Rủi ro Thấp (Low Risk) | **Phê duyệt tự động hoàn toàn (Straight-Through Processing - STP)**. Hồ sơ đủ điều kiện giải ngân ngay với lãi suất ưu đãi. |
+| 🟡 **REVIEW (Xem xét)** | **617 – 643** | Rủi ro Trung Bình (Medium Risk) | **Điều chuyển chuyên viên tín dụng thẩm định thủ công**. Hệ thống tự động đính kèm danh sách cảnh báo để đàm phán giảm hạn mức hoặc tăng kỳ hạn vay. |
+| 🔴 **REJECT (Từ chối)** | **≤ 616** | Rủi ro Cao (High Risk) | **Từ chối cấp tín dụng tự động**. Hệ thống sinh văn bản thông báo từ chối kèm mã nguyên nhân chính xác theo quy định minh bạch tín dụng. |
 
 ---
 
-### 4.4 Khả Năng Giải Trình & Reason Codes
+### 4.4 Khả Năng Giải Trình Minh Bạch & Reason Codes
 
-Hệ thống giải quyết triệt để bài toán "Hộp đen (Black-box)" trong AI bằng việc tích hợp **Bộ sinh mã nguyên nhân rủi ro (Reason Codes Engine)**:
+Khắc phục hoàn toàn nhược điểm "Hộp đen" của AI bằng việc sinh mã lý do rủi ro hàng đầu (Top Risk Drivers):
 - `REASON_HIGH_DTI`: Tỷ lệ tổng nợ trên thu nhập vượt ngưỡng an toàn.
-- `REASON_HIGH_PTI`: Nghĩa vụ trả nợ hàng tháng chiếm tỷ trọng quá lớn trong thu nhập.
+- `REASON_HIGH_PTI`: Nghĩa vụ nợ hàng tháng chiếm dụng dòng tiền sinh hoạt quá mức (> 25%).
 - `REASON_PRIOR_DEFAULT`: Khách hàng có lịch sử ghi nhận nợ xấu trong quá khứ.
 - `REASON_PAST_DELINQUENCIES`: Từng có lịch sử chậm trả lãi/gốc.
-- `REASON_HIGH_CREDIT_UTILIZATION`: Tỷ lệ sử dụng hạn mức thẻ tín dụng ở mức báo động (> 80%).
+- `REASON_HIGH_CREDIT_UTILIZATION`: Sử dụng trên 80% hạn mức thẻ tín dụng.
 
-Mỗi mã lý do được hệ thống đa ngôn ngữ hóa (i18n) hiển thị trực tiếp trên giao diện người dùng bằng tiếng Việt và tiếng Anh, giúp khách hàng hiểu rõ nguyên nhân và chuyên viên có căn cứ giải trình trước kiểm toán độc lập.
+Hệ thống hỗ trợ song ngữ (Tiếng Việt và Tiếng Anh), giúp chuyên viên có cơ sở vững chắc khi giải trình với ban kiểm toán nội bộ.
 
 ---
 
@@ -255,58 +368,56 @@ Mỗi mã lý do được hệ thống đa ngôn ngữ hóa (i18n) hiển thị 
 
 ### 5.1 Performance Benchmark
 
-Hiệu năng mô hình được kiểm định nghiêm ngặt trên tập kiểm thử độc lập (Test Set):
+Hiệu năng kiểm định trên tập dữ liệu kiểm thử độc lập (Test Set):
 
-| Chỉ Số Đánh Giá | Logistic Regression (Baseline) | LightGBM (Champion) | Ý Nghĩa Nghiệp Vụ Trong Ngân Hàng |
+| Chỉ Số Đánh Giá | Logistic Regression (Baseline) | LightGBM (Champion) | Đánh Giá Hiệu Quả Nghiệp Vụ |
 |---|---|---|---|
-| **ROC-AUC** | 0.8607 | **0.9431** | Năng lực phân biệt tổng thể giữa hồ sơ tốt và hồ sơ xấu trên toàn dải điểm |
-| **PR-AUC** | 0.7214 | **0.8916** | **Thước đo cốt lõi**: Khả năng nhận diện chính xác nợ xấu trong điều kiện mẫu mất cân bằng |
-| **KS Statistic** | 58.40 | **73.08** | Độ tách biệt phân phối tích lũy giữa 2 nhóm (tiêu chuẩn ngân hàng yêu cầu KS > 40) |
-| **Gini Coefficient** | 0.7214 | **0.8862** | Sức mạnh phân hóa tiêu chuẩn trong xây dựng Credit Scorecard ($2 \times \text{AUC} - 1$) |
-| **F1-Score** | 0.7021 | **0.8415** | Điểm hài hòa giữa khả năng bắt nợ xấu (Recall) và độ chuẩn xác (Precision) |
+| **ROC-AUC** | 0.8607 | **0.9431** | Năng lực phân biệt xuất sắc giữa hồ sơ tốt và hồ sơ xấu trên toàn dải điểm |
+| **PR-AUC** | 0.7214 | **0.8916** | **Chỉ số cốt lõi**: Khả năng nhận diện chính xác nợ xấu khi dữ liệu mất cân bằng |
+| **KS Statistic** | 58.40 | **73.08** | Độ tách biệt phân phối điểm giữa 2 nhóm (tiêu chuẩn ngân hàng yêu cầu KS > 40) |
+| **Gini Coefficient** | 0.7214 | **0.8862** | Sức mạnh phân hóa tiêu chuẩn trong scorecard tín dụng ($2 \times \text{AUC} - 1$) |
+| **F1-Score** | 0.7021 | **0.8415** | Cân bằng tối ưu giữa khả năng bắt nợ xấu (Recall) và độ chuẩn xác (Precision) |
 
 ---
 
-### 5.2 Kỹ Thuật Thẩm Định & Đảm Bảo Độ Tin Cậy
+### 5.2 Kỹ Thuật Thẩm Định Mô Hình Tiêu Chuẩn Ngân Hàng
 
-1. **Tối ưu siêu tham số Bayesian (Optuna)**: Sử dụng thuật toán `TPESampler` kết hợp cơ chế cắt tỉa nhánh kém hiệu quả `MedianPruner`, tối ưu hóa trực tiếp hàm mục tiêu **PR-AUC** qua 50 trials với 5-Fold Stratified Cross-Validation.
-2. **Kiểm tra tính đơn điệu (Monotonicity Check)**: Phân tích 10 phân vị điểm số (Decile Analysis) xác nhận: Điểm tín dụng tăng thì tỷ lệ nợ xấu thực tế giảm liên tục 100%, không xảy ra hiện tượng đảo chiều rủi ro.
-3. **Thực nghiệm mất cân bằng (SMOTE-NC vs `scale_pos_weight`)**: Thực nghiệm chỉ ra SMOTE-NC làm tăng khoảng cách sai lệch giữa tập huấn luyện và kiểm thử (Overfitting gap). Do đó, kỹ thuật gán trọng số lớp tự nhiên `scale_pos_weight` của LightGBM được lựa chọn làm giải pháp tối ưu.
-4. **Hiệu chỉnh xác suất (Probability Calibration)**: Phân tích độ dốc hiệu chuẩn phát hiện việc sử dụng trọng số lớp làm dịch chuyển nhẹ giá trị kỳ vọng PD (~0.31 so với mức nền 0.22). Hệ thống khuyến nghị áp dụng `CalibratedClassifierCV` (Isotonic/Sigmoid) khi tổ chức muốn sử dụng xác suất này cho bài toán định giá khoản vay theo rủi ro (Risk-Based Pricing).
-
----
-
-## 6. Power BI Dashboard
-
-Tệp báo cáo quản trị chuyên sâu [`Power BI/risk.pbix`](Power%20BI/risk.pbix) cung cấp góc nhìn toàn cảnh phục vụ Hội đồng Quản trị rủi ro và Giám đốc Khối Tín dụng:
-
-- **Portfolio Quality Tracking**: Theo dõi phân phối điểm tín dụng của toàn bộ danh mục theo thời gian thực.
-- **Underwriting Conversion Funnel**: Đo lường tỷ lệ Phê duyệt / Xem xét / Từ chối theo từng nhóm khách hàng và chi nhánh.
-- **Segment Risk Deep-Dive**: Cắt lớp rủi ro đa chiều theo mục đích vay, loại hình cư trú, hình thức việc làm và trình độ học vấn.
-- **Model Drift & Early Warning**: Giám sát xu hướng dịch chuyển xác suất vỡ nợ bình quân theo từng tháng, phát hiện sớm dấu hiệu suy giảm chất lượng danh mục để kích hoạt tái huấn luyện mô hình.
+1. **Tối ưu siêu tham số Bayesian (Optuna)**: Áp dụng `TPESampler` kết hợp cắt tỉa `MedianPruner`, tối ưu hóa trực tiếp hàm mục tiêu **PR-AUC** qua 50 trials với 5-Fold Stratified Cross-Validation.
+2. **Kiểm tra tính đơn điệu (Monotonicity Check qua Decile Analysis)**: Chia điểm số thành 10 phân vị và kiểm chứng: Điểm số tăng thì tỷ lệ nợ xấu thực tế giảm liên tục 100%, không bị nghịch đảo rủi ro.
+3. **Thực nghiệm mất cân bằng (SMOTE-NC vs `scale_pos_weight`)**: Thực nghiệm chứng minh SMOTE-NC tạo khoảng cách sai lệch giữa tập huấn luyện và kiểm thử (Overfitting gap). Kỹ thuật điều chỉnh trọng số tự nhiên `scale_pos_weight` của LightGBM được lựa chọn để đảm bảo tính khái quát hóa cao nhất.
+4. **Hiệu chuẩn xác suất (Probability Calibration)**: Sử dụng đường cong hiệu chuẩn phân tích độ lệch PD khi áp dụng trọng số lớp; đề xuất áp dụng `CalibratedClassifierCV` khi ngân hàng đưa vào định giá theo rủi ro.
 
 ---
 
-## 7. System Architecture & Deployment
+## 6. Power BI Executive Dashboard
 
-Hệ thống được thiết kế theo kiến trúc Microservices hiện đại, tách biệt hoàn toàn giữa tầng giao diện, dịch vụ xử lý nghiệp vụ và cơ sở dữ liệu:
+Báo cáo điều hành chuyên sâu [`Power BI/risk.pbix`](Power%20BI/risk.pbix) cung cấp góc nhìn trực quan toàn diện:
+
+- **Portfolio Health Tracking**: Giám sát phân bổ điểm số FICO và biến động tỷ lệ an toàn/rủi ro (tỷ lệ 3.6:1) theo thời gian thực.
+- **Approval Conversion Funnel**: Đo lường tỷ lệ Phê duyệt / Xem xét / Từ chối theo chi nhánh và phân khúc khách hàng.
+- **Segment Risk Drill-Down**: Cắt lớp rủi ro đa chiều theo hình thức cư trú (Rent vs Own), độ tuổi (đường cong chữ U) và mục đích vay.
+- **Model Drift Monitoring**: Cảnh báo sớm khi xác suất vỡ nợ bình quân tháng có dấu hiệu dịch chuyển lệch khỏi phân phối ban đầu.
+
+---
+
+## 7. System Architecture & Tech Stack
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    CLIENT LAYER (Vercel)                    │
-│  Next.js 16 (React 19) • TypeScript • Tailwind CSS • i18n   │
-│  - Giao diện thẩm định hồ sơ vay trực quan                  │
-│  - Tra cứu lịch sử & giải trình điểm số                     │
+│    Next.js 16 (React 19) • TypeScript • Tailwind CSS • i18n │
+│  - Giao diện nộp hồ sơ vay & thẩm định trực quan            │
+│  - Tra cứu lịch sử, phân tích rủi ro & xem mã giải trình   │
 └──────────────────────────────┬──────────────────────────────┘
                                │
-                               │ HTTPS / JSON API (JWT Auth)
+                               │ HTTPS / REST API (JWT Bearer)
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   BACKEND LAYER (Render)                    │
 │             FastAPI • Uvicorn • Pydantic v2                 │
 │  ┌───────────────────────────┬───────────────────────────┐  │
 │  │   Authentication Service  │   Credit Scoring Service  │  │
-│  │   (JWT, Bcrypt, Roles)    │   (Scoring Pipeline)      │  │
+│  │   (JWT, Bcrypt, Roles)    │   (Pipeline & Reason Code)│  │
 │  └───────────────────────────┴─────────────┬─────────────┘  │
 │                                            │                │
 │                                            ▼                │
@@ -333,7 +444,7 @@ Hệ thống được thiết kế theo kiến trúc Microservices hiện đại
 ### Yêu cầu môi trường:
 - Python >= 3.10
 - Node.js >= 18.0.0 & npm >= 9.0.0
-- PostgreSQL (Cài đặt cục bộ hoặc sử dụng Supabase / Neon Cloud)
+- PostgreSQL (Local hoặc Supabase Cloud)
 
 ### Bước 1 — Khởi chạy Backend (FastAPI)
 
@@ -341,24 +452,19 @@ Hệ thống được thiết kế theo kiến trúc Microservices hiện đại
 # 1. Di chuyển vào thư mục Backend
 cd App/BE
 
-# 2. Khởi tạo môi trường ảo Python
+# 2. Khởi tạo và kích hoạt môi trường ảo Python
 python -m venv venv
-
-# Kích hoạt môi trường ảo:
 # Windows (PowerShell):
 .\venv\Scripts\Activate.ps1
-# Windows (cmd):
-.\venv\Scripts\activate.bat
 # Linux / macOS:
 source venv/bin/activate
 
-# 3. Cài đặt các thư viện phụ thuộc
+# 3. Cài đặt thư viện phụ thuộc
 pip install -r requirements.txt
 
 # 4. Cấu hình biến môi trường
-# Tạo file .env từ file mẫu:
 cp .env.example .env
-# Chỉnh sửa thông tin DATABASE_URL và JWT Secret phù hợp trong .env
+# Điền thông tin DATABASE_URL và JWT Secret phù hợp trong file .env
 
 # 5. Khởi chạy máy chủ API
 uvicorn main:app --reload --port 8000
@@ -378,22 +484,19 @@ cd App/FE
 npm install
 
 # 3. Cấu hình biến môi trường
-# Tạo file .env.local trong App/FE với nội dung:
 echo 'NEXT_PUBLIC_API_URL=http://localhost:8000' > .env.local
 
 # 4. Khởi chạy giao diện phát triển
 npm run dev
 ```
-- Truy cập giao diện ứng dụng tại: `http://localhost:3000`
+- Truy cập ứng dụng tại: `http://localhost:3000`
 
 ---
 
-### Bước 3 — Khám phá và Tái huấn luyện Mô hình (Jupyter Notebooks)
-
-Để khám phá dữ liệu hoặc tinh chỉnh mô hình, khởi chạy môi trường phân tích:
+### Bước 3 — Khám phá Notebooks Phân Tích
 
 ```bash
-# Cài đặt công cụ Jupyter
+# Cài đặt Jupyter
 pip install jupyter
 
 # Khởi động Jupyter Notebook
@@ -456,8 +559,6 @@ NovaBank_CreditRisk/
 ---
 
 ## 10. Limitations & Future Roadmap
-
-Mặc dù hệ thống đã đạt hiệu năng và độ ổn định cao, dự án vẫn ghi nhận các định hướng nâng cấp trong tương lai:
 
 1. **Bổ sung dữ liệu tài sản thế chấp (LTV Integration)**: Thu thập thêm giá trị định giá tài sản và số tiền thế chấp ban đầu nhằm xóa bỏ điểm mù (Uncertainty Hotspot) đối với nhóm khách hàng vay mua nhà `MORTGAGE`.
 2. **Giải thích cục bộ theo thời gian thực bằng SHAP**: Tích hợp thuật toán TreeSHAP vào trực tiếp API Backend để xuất giá trị đóng góp Shapley Value cho từng thuộc tính của riêng từng hồ sơ.
