@@ -1,79 +1,79 @@
-# NovaBank — Hệ Thống Chấm Điểm Tín Dụng & Thẩm Định Khoản Vay Tự Động
-> Credit Risk Analysis & Intelligent Scoring System
+﻿# Phân tích rủi ro tín dụng -- Credit Risk Analysis & Intelligent Loan Decisioning System
+> Phân tích rủi ro tín dụng danh mục & Hệ thống chấm điểm, phê duyệt khoản vay tự động theo thời gian thực  
+> 🌐 **DEMO thực tế**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)   
+> 🛠️ **Tech Stack**: FastAPI · LightGBM · Next.js 16 · PostgreSQL · Power BI · Scikit-Learn · Optuna
 
-> 🌐 **Ứng dụng Web thẩm định trực tiếp**: [https://credit-risk-prediction-pi.vercel.app/en/apply](https://credit-risk-prediction-pi.vercel.app/en/apply)  
-> 📖 **Tài liệu API tương tác (Swagger)**: [https://credit-risk-prediction-7nxt.onrender.com/docs](https://credit-risk-prediction-7nxt.onrender.com/docs)  
-> 📊 **Báo cáo điều hành Power BI**: [`Power BI/risk.pbix`](Power%20BI/risk.pbix)  
-> 🛠️ **Công nghệ sử dụng**: FastAPI · LightGBM · Next.js 16 · PostgreSQL · Power BI · Scikit-Learn · Optuna
+Dự án này mình xây dựng nhằm giải quyết bài toán cốt lõi trong mảng cho vay tiêu dùng tín chấp (Retail Consumer Lending): **Làm sao để tự động hóa quy trình thẩm định tín dụng, kiểm soát chặt chẽ tỷ lệ nợ xấu nhưng không bóp nghẹt doanh số tăng trưởng của ngân hàng.**
 
-Dự án phân tích rủi ro tín dụng tiêu dùng và xây dựng hệ thống xét duyệt khoản vay tự động dựa trên **32,581 hồ sơ tín dụng thực tế** (Mỹ, Anh, Canada). Dự án giải quyết trọn vẹn bài toán cho vay của ngân hàng bán lẻ: từ **phân tích dữ liệu thực tế (EDA)** để tìm ra nguyên nhân gây nợ xấu, **xây dựng chính sách tín dụng theo từng nhóm chỉ số**, **mô hình hóa bằng học máy (Machine Learning & Thang điểm FICO)**, cho đến **Dashboard điều hành (Power BI)** và **hệ thống Web phê duyệt tự động theo thời gian thực**.
+Thay vì chỉ dựng một mô hình Machine Learning lý thuyết như chiếc "hộp đen", dự án giải quyết trọn vẹn vòng đời một giải pháp tài chính thực tế: đào sâu phân tích hành vi nợ từ **32,581 hồ sơ tín dụng thực tế** (Mỹ, Anh, Canada), thiết kế bộ quy tắc chính sách tín dụng (Credit Policy), xây dựng mô hình LightGBM tối ưu chuẩn hóa theo thang điểm FICO (300–850), phát triển Dashboard điều hành rủi ro (Power BI), và đóng gói thành hệ thống Web xét duyệt tự động theo thời gian thực.
 
 ---
 
 ## Mục Lục / Table of Contents
 
 - [1. Bối Cảnh Nghiệp Vụ & Giá Trị Thực Tế](#1-bối-cảnh-nghiệp-vụ--giá-trị-thực-tế)
-  - [1.1 Vấn Đề Của Quy Trình Cho Vay Truyền Thống](#11-vấn-đề-của-quy-trình-cho-vay-truyền-thống)
-  - [1.2 Giá Trị Mang Lại Cho Các Bộ Phận Trong Ngân Hàng](#12-giá-trị-mang-lại-cho-các-bộ-phận-trong-ngân-hàng)
-  - [1.3 Tổng Quan Dữ Liệu & Các Con Số Cốt Lõi](#13-tổng-quan-dữ-liệu--các-con-số-cốt-lõi)
-- [2. Tổng Quan Phân Tích Dữ Liệu & Quy Trình Ra Quyết Định](#2-tổng-quan-phân-tích-dữ-liệu--quy-trình-ra-quyết-định)
-  - [2.1 Mục Tiêu Trọng Tâm Của Phân Tích Dữ Liệu](#21-mục-tiêu-trọng-tâm-của-phân-tích-dữ-liệu)
-  - [2.2 Quy Trình 4 Bước: Từ Dữ Liệu Thô Đến Quyết Định Phê Duyệt](#22-quy-trình-4-bước-từ-dữ-liệu-thô-đến-quyết-định-phê-duyệt)
-  - [2.3 Nguyên Tắc Cân Bằng Giữa Tăng Trưởng Doanh Thu Và An Toàn Vốn](#23-nguyên-tắc-cân-bằng-giữa-tăng-trưởng-doanh-thu-và-an-toàn-vốn)
-- [3. Phân Tích Thực Tế & Chính Sách Tín Dụng Theo Từng Nhóm Chỉ Số](#3-phân-tích-thực-tế--chính-sách-tín-dụng-theo-từng-nhóm-chỉ-số)
-  - [3.1 Nhóm Khả Năng Tài Chính & Đòn Bẩy Nợ](#31-nhóm-khả-năng-tài-chính--đòn-bẩy-nợ)
-  - [3.2 Nhóm Lịch Sử Tín Dụng & Hành Vi Trả Nợ](#32-nhóm-lịch-sử-tín-dụng--hành-vi-trả-nợ)
-  - [3.3 Nhóm Nơi Ở & Tài Sản Bảo Đảm](#33-nhóm-nơi-ở--tài-sản-bảo-đảm)
-  - [3.4 Nhóm Mục Đích Vay Vốn](#34-nhóm-mục-đích-vay-vốn)
-  - [3.5 Nhóm Đặc Điểm Khách Hàng (Tuổi, Việc Làm, Địa Bàn)](#35-nhóm-đặc-điểm-khách-hàng-tuổi-việc-làm-địa-bàn)
-  - [3.6 Bảng Quy Tắc Thẩm Định & Phân Luồng Hồ Sơ (Business Rules)](#36-bảng-quy-tắc-thẩm-định--phân-luồng-hồ-sơ-business-rules)
-  - [3.7 Lộ Trình Triển Khai Thực Tế](#37-lộ-trình-triển-khai-thực-tế)
-- [4. Mô Hình Học Máy & Hệ Thống Chấm Điểm Tự Động](#4-mô-hình-học-máy--hệ-thống-chấm-điểm-tự-động)
-  - [4.1 Quy Trình Xử Lý Hồ Sơ & Chấm Điểm](#41-quy-trình-xử-lý-hồ-sơ--chấm-điểm)
-  - [4.2 Chuẩn Hóa Sang Thang Điểm FICO (300–850)](#42-chuẩn-hóa-sang-thang-điểm-fico-300850)
-  - [4.3 Khung Phân Luồng Quyết Định 3 Cấp](#43-khung-phân-luồng-quyết-định-3-cấp)
-  - [4.4 Minh Bạch Hóa Quyết Định Với Hệ Thống Mã Lý Do (Reason Codes)](#44-minh-bạch-hóa-quyết-định-với-hệ-thống-mã-lý-do-reason-codes)
-- [5. Đánh Giá Hiệu Năng & Độ Tin Cậy Của Mô Hình](#5-đánh-giá-hiệu-năng--độ-tin-cậy-của-mô-hình)
-  - [5.1 Bảng So Sánh Hiệu Năng](#51-bảng-so-sánh-hiệu-năng)
-  - [5.2 Ý Nghĩa Thực Tế Của Các Chỉ Số Đánh Giá](#52-ý-nghĩa-thực-tế-của-các-chỉ-số-đánh-giá)
-  - [5.3 Các Bước Kiểm Định Đảm Bảo An Toàn](#53-các-bước-kiểm-định-đảm-bảo-an-toàn)
+  - [1.1 Thách thức trong thẩm định tín dụng truyền thống](#11-thách-thức-trong-thẩm-định-tín-dụng-truyền-thống)
+  - [1.2 Giải pháp & Giá trị mang lại cho các bộ phận](#12-giải-pháp--giá-trị-mang-lại-cho-các-bộ-phận)
+  - [1.3 Bức tranh tổng thể từ bộ dữ liệu 32,581 hồ sơ](#13-bức-tranh-tổng-thể-từ-bộ-dữ-liệu-32581-hồ-sơ)
+- [2. Bóc Tách Dữ Liệu & Khám Phá Rủi Ro Danh Mục (Portfolio Insights)](#2-bóc-tách-dữ-liệu--khám-phá-rủi-ro-danh-mục-portfolio-insights)
+  - [2.1 Những phát hiện cốt lõi từ dữ liệu thực tế](#21-những-phát-hiện-cốt-lõi-từ-dữ-liệu-thực-tế)
+  - [2.2 Những góc khuất kỹ thuật phát hiện thêm trong quá trình làm](#22-những-góc-khuất-kỹ-thuật-phát-hiện-thêm-trong-quá-trình-làm)
+  - [2.3 Chu trình 4 bước: Từ dữ liệu phân tích đến quyết định giải ngân](#23-chu-trình-4-bước-từ-dữ-liệu-phân-tích-đến-quyết-định-giải-ngân)
+  - [2.4 Bài toán cân bằng giữa tăng trưởng doanh số và an toàn vốn](#24-bài-toán-cân-bằng-giữa-tăng-trưởng-doanh-số-và-an-toàn-vốn)
+- [3. Chính Sách Tín Dụng & Khung Thẩm Định Theo Từng Nhóm Chỉ Số](#3-chính-sách-tín-dụng--khung-thẩm-định-theo-từng-nhóm-chỉ-số)
+  - [3.1 Nhóm Khả năng tài chính & Đòn bẩy nợ](#31-nhóm-khả-năng-tài-chính--đòn-bẩy-nợ)
+  - [3.2 Nhóm Lịch sử tín dụng & Kỷ luật thanh toán](#32-nhóm-lịch-sử-tín-dụng--kỷ-luật-thanh-toán)
+  - [3.3 Nhóm Nơi ở & Tài sản bảo đảm](#33-nhóm-nơi-ở--tài-sản-bảo-đảm)
+  - [3.4 Nhóm Mục đích sử dụng vốn](#34-nhóm-mục-đích-sử-dụng-vốn)
+  - [3.5 Nhóm Đặc điểm khách hàng (Độ tuổi, Việc làm, Quốc gia)](#35-nhóm-đặc-điểm-khách-hàng-độ-tuổi-việc-làm-quốc-gia)
+  - [3.6 Ma trận quy tắc phân luồng hồ sơ (Knock-out, Soft Review, Outlier Flags)](#36-ma-trận-quy-tắc-phân-luồng-hồ-sơ-knock-out-soft-review-outlier-flags)
+  - [3.7 Lộ trình triển khai chính sách vào vận hành](#37-lộ-trình-triển-khai-chính-sách-vào-vận-hành)
+- [4. Mô Hình Học Máy & Hệ Thống Chấm Điểm FICO](#4-mô-hình-học-máy--hệ-thống-chấm-điểm-fico)
+  - [4.1 Quy trình xử lý đặc trưng & Chấm điểm đầu-cuối](#41-quy-trình-xử-lý-đặc-trưng--chấm-điểm-đầu-cuối)
+  - [4.2 Chuẩn hóa xác suất sang thang điểm FICO (300–850)](#42-chuẩn-hóa-xác-suất-sang-thang-điểm-fico-300850)
+  - [4.3 Khung phân luồng quyết định 3 cấp (Approve / Review / Reject)](#43-khung-phân-luồng-quyết-định-3-cấp-approve--review--reject)
+  - [4.4 Minh bạch hóa quyết định với hệ thống mã lý do (Reason Codes)](#44-minh-bạch-hóa-quyết-định-với-hệ-thống-mã-lý-do-reason-codes)
+- [5. Đánh Giá Hiệu Năng & Độ Tin Cậy Mô Hình](#5-đánh-giá-hiệu-năng--độ-tin-cậy-mô-hình)
+  - [5.1 So sánh mô hình LightGBM với Logistic Regression cơ sở](#51-so-sánh-mô-hình-lightgbm-với-logistic-regression-cơ-sở)
+  - [5.2 Ý nghĩa thực tế của các chỉ số thẩm định (PR-AUC, KS, Gini)](#52-ý-nghĩa-thực-tế-của-các-chỉ-số-thẩm-định-pr-auc-ks-gini)
+  - [5.3 Quy trình kiểm thử và chống rò rỉ dữ liệu](#53-quy-trình-kiểm-thử-và-chống-rò-rỉ-dữ-liệu)
 - [6. Báo Cáo Quản Trị Trực Quan (Power BI Dashboard)](#6-báo-cáo-quản-trị-trực-quan-power-bi-dashboard)
 - [7. Kiến Trúc Kỹ Thuật & Công Nghệ](#7-kiến-trúc-kỹ-thuật--công-nghệ)
 - [8. Hướng Dẫn Cài Đặt & Chạy Thử](#8-hướng-dẫn-cài-đặt--chạy-thử)
 - [9. Cấu Trúc Thư Mục Dự Án](#9-cấu-trúc-thư-mục-dự-án)
-- [10. Hạn Chế & Hướng Phát Triển Tiếp Theo](#10-hạn-chế--hướng-phát-triển-tiếp-theo)
+- [10. Hạn Chế & Định Hướng Phát Triển Tiếp Theo](#10-hạn-chế--định-hướng-phát-triển-tiếp-theo)
 
 ---
 
 ## 1. Bối Cảnh Nghiệp Vụ & Giá Trị Thực Tế
 
-### 1.1 Vấn Đề Của Quy Trình Cho Vay Truyền Thống
+### 1.1 Thách thức trong thẩm định tín dụng truyền thống
 
-Trong hoạt động cho vay tiêu dùng, ngân hàng luôn phải giải bài toán: **Làm sao để cho vay được nhiều khách hàng nhưng vẫn giữ được tiền an toàn, không bị nợ xấu?**
+Trong mảng cho vay tiêu dùng, các ngân hàng luôn phải đối mặt với một bài toán cân não: **Làm sao để cho vay được nhiều khách hàng nhưng vẫn giữ được tiền an toàn, không bị nợ xấu?**
 
-Cách làm truyền thống tại các ngân hàng thường gặp 3 vấn đề lớn:
-1. **Xét duyệt thủ công, chậm chạp**: Chuyên viên tín dụng phải xem từng hồ sơ giấy tờ, mất từ vài ngày đến cả tuần, chi phí vận hành cao mà khách hàng lại phải chờ đợi lâu.
-2. **Quyết định mang tính cảm tính**: Cùng một bộ hồ sơ, chuyên viên khó tính có thể từ chối nhưng chuyên viên dễ tính lại duyệt, dẫn đến chất lượng thẩm định không đồng đều.
-3. **Quy tắc cứng nhắc (Đạt / Không đạt)**: Thường bỏ lỡ những khách hàng tốt chỉ vì thiếu một tiêu chí phụ, hoặc ngược lại, duyệt nhầm những khách hàng có nguy cơ đứt gãy dòng tiền trong tương lai.
+Quy trình thẩm định tín dụng truyền thống thường vấp phải 3 trở ngại lớn:
+1. **Xét duyệt thủ công, mất thời gian**: Hồ sơ giấy tờ chuyển qua nhiều khâu, chuyên viên tín dụng mất từ vài ngày đến cả tuần để ra quyết định. Chi phí vận hành cao mà khách hàng thì phải chờ đợi lâu, dễ bỏ sang ngân hàng khác.
+2. **Quyết định mang nặng tính chủ quan**: Cùng một bộ hồ sơ tài chính, chuyên viên khó tính có thể từ chối nhưng chuyên viên dễ tính lại duyệt. Tiêu chuẩn thẩm định thiếu tính nhất quán trên toàn hệ thống chi nhánh.
+3. **Quy tắc cứng nhắc (Đạt / Trượt)**: Các bộ tiêu chí cố định thường bỏ sót những khách hàng tiềm năng chỉ vì thiếu một điều kiện phụ, hoặc ngược lại, phê duyệt nhầm những hồ sơ trông đẹp trên giấy tờ nhưng thực chất đang đứng trước nguy cơ đứt gãy dòng tiền.
 
 ---
 
-### 1.2 Giá Trị Mang Lại Cho Các Bộ Phận Trong Ngân Hàng
+### 1.2 Giải pháp & Giá trị mang lại cho các bộ phận
 
-Hệ thống được thiết kế để giải quyết bài toán cụ thể của từng phòng ban:
+Hệ thống được thiết kế xuất phát từ nhu cầu thực tế của từng bộ phận trong ngân hàng:
 
-| Bộ phận | Mong muốn chính | Giải pháp từ dự án |
+| Bộ phận | Vấn đề quan tâm nhất | Giá trị giải pháp mang lại |
 |---|---|---|
-| **Quản trị Rủi ro** *(Risk Team)* | Nắm bắt rủi ro toàn danh mục, kiểm soát tỷ lệ nợ xấu không vượt trần cho phép. | Báo cáo phân bổ rủi ro, xác định rõ các nhóm khách hàng dễ vỡ nợ để đặt ngưỡng chặn an toàn. |
-| **Vận hành Cho vay** *(Operations Team)* | Duyệt hồ sơ nhanh, giảm việc thủ công, quyết định chuẩn xác và nhất quán. | Hệ thống chấm điểm tự động, phân loại rõ: *Hồ sơ duyệt ngay*, *Hồ sơ cần xem xét lại*, *Hồ sơ từ chối thẳng*. |
-| **Ban Giám Đốc** *(Leadership)* | Tăng trưởng doanh thu cho vay nhưng danh mục vẫn an toàn, sinh lời bền vững. | Dashboard Power BI theo dõi sức khỏe danh mục theo thời gian thực, hỗ trợ định giá lãi suất theo rủi ro. |
-| **Phát triển Sản phẩm** *(Product Team)* | Biết rõ đặc điểm từng nhóm khách hàng để thiết kế gói vay phù hợp. | Đề xuất gói vay chuyên biệt theo độ tuổi, điều chỉnh biên độ lãi suất linh hoạt theo mục đích vay. |
+| **Quản trị Rủi ro** *(Risk Team)* | Kiểm soát trần nợ xấu toàn danh mục, phát hiện sớm các nguy cơ tiềm ẩn. | Báo cáo chi tiết phân bổ rủi ro, xác định chính xác các điểm nóng vỡ nợ để thiết lập ngưỡng chặn an toàn. |
+| **Vận hành Cho vay** *(Operations Team)* | Giảm tải việc thẩm định thủ công, rút ngắn thời gian xử lý hồ sơ. | Tự động chấm điểm và phân luồng tức thì: *Hồ sơ duyệt ngay*, *Hồ sơ cần thẩm định lại*, *Hồ sơ từ chối thẳng*. |
+| **Ban Giám Đốc** *(Leadership)* | Tối ưu hóa lợi nhuận danh mục, cân bằng giữa tăng trưởng và an toàn vốn. | Dashboard Power BI theo dõi sức khỏe danh mục theo thời gian thực, hỗ trợ định giá lãi suất theo mức độ rủi ro. |
+| **Phát triển Sản phẩm** *(Product Team)* | Hiểu sâu hành vi khách hàng để thiết kế các gói vay phù hợp. | Đề xuất hạn mức và kỳ hạn theo nhóm tuổi, điều chỉnh biên độ lãi suất linh hoạt theo từng mục đích vay. |
 
 ---
 
-### 1.3 Tổng Quan Dữ Liệu & Các Con Số Cốt Lõi
+### 1.3 Bức tranh tổng thể từ bộ dữ liệu 32,581 hồ sơ
 
-Bộ dữ liệu gồm **32,581 khoản vay** trên 3 quốc gia (Mỹ, Anh, Canada) với các chỉ số nền tảng:
+Bộ dữ liệu gồm **32,581 hồ sơ vay tiêu dùng** tại 3 thị trường phát triển (Mỹ, Anh, Canada), phản ánh bức tranh thực tế của danh mục:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -90,62 +90,115 @@ Bộ dữ liệu gồm **32,581 khoản vay** trên 3 quốc gia (Mỹ, Anh, Can
 └───────────────────────┴────────────────────────┴───────────────────────────────────────┘
 ```
 
-> **Nhận xét nhanh**: Tỷ lệ nợ xấu 21.82% là mức phổ biến trong mảng cho vay tiêu dùng tín chấp (chuẩn ngành thường dao động từ 18% đến 25%). Đáng chú ý, nhóm khách hàng vỡ nợ có **thu nhập thấp hơn 30%** nhưng lại **vay nhiều hơn 18%** so với nhóm trả nợ tốt, khiến họ phải gánh mức lãi suất cao hơn và nhanh chóng kiệt quệ dòng tiền.
+> **Nhận định danh mục**: Tỷ lệ nợ xấu 21.82% là mức phổ biến trong phân khúc vay tín chấp không có tài sản thế chấp (chuẩn ngành thường nằm trong khoảng 18% – 25%). Đáng chú ý, nhóm khách hàng vỡ nợ có **thu nhập thấp hơn 30%** nhưng lại **vay nhiều hơn 18%** so với nhóm trả nợ tốt, khiến họ phải gánh mức lãi suất cao hơn và nhanh chóng kiệt quệ dòng tiền trả nợ.
 
 ---
 
-## 2. Tổng Quan Phân Tích Dữ Liệu & Quy Trình Ra Quyết Định
+## 2. Bóc Tách Dữ Liệu & Khám Phá Rủi Ro Danh Mục (Portfolio Insights)
 
-### 2.1 Mục Tiêu Trọng Tâm Của Phân Tích Dữ Liệu
+### 2.1 Những phát hiện cốt lõi từ dữ liệu thực tế
 
-Mục tiêu lớn nhất khi phân tích dữ liệu tín dụng là trả lời 3 câu hỏi thực tế:
-1. **Ai là người có nguy cơ không trả được nợ?** (Đặc điểm nhận diện họ là gì?)
-2. **Tại sao họ lại vỡ nợ?** (Do áp lực nợ quá lớn, do sự cố bất ngờ hay do thói quen chi tiêu?)
-3. **Ngân hàng cần đưa ra hành động gì với từng hồ sơ?** (Cho vay ngay, yêu cầu thêm giấy tờ, tăng lãi suất hay từ chối thẳng?)
+Khi bắt tay vào đào sâu 32,581 bộ hồ sơ, mục tiêu đầu tiên của mình không phải là lao vào chạy mô hình ngay, mà là tìm câu trả lời cho những băn khoăn thiết thực nhất của người làm tín dụng: **Nợ xấu thực sự phát sinh từ đâu, nhóm khách hàng nào dễ tổn thương nhất, và đâu là những tín hiệu cảnh báo sớm mà ngân hàng có thể chặn trước?**
 
-Dữ liệu đầu vào gồm 4 nhóm thông tin chính:
-- **Thông tin cá nhân**: Độ tuổi, nơi ở, loại hợp đồng lao động, thâm niên làm việc.
-- **Tình hình tài chính**: Thu nhập hàng năm, các khoản nợ hiện có tại ngân hàng khác.
-- **Khoản vay đăng ký**: Số tiền vay, kỳ hạn, lãi suất, mục đích vay vốn.
-- **Lịch sử tín dụng**: Đã từng dính nợ xấu chưa, số lần quá hạn, tỷ lệ dùng thẻ tín dụng, số tài khoản đang mở.
+Qua quá trình phân tích đối chiếu, dữ liệu đã bộc lộ những câu chuyện rất rõ ràng:
+
+#### 1. Nhóm khách hàng có nguy cơ nợ quá hạn cao nhất
+Nợ xấu trong dữ liệu không rơi rải rác mà tụ lại thành những "túi rủi ro" rất rõ rệt:
+- **Khách hàng đi thuê nhà (`RENT`)**: Chiếm tỷ trọng nộp hồ sơ đông nhất nhưng tỷ lệ nợ xấu lên đến **31.57%**, cao gấp **4.2 lần** so với nhóm đã sở hữu nhà riêng (`OWN` - chỉ 7.47%). Khoản tiền thuê nhà cố định hàng tháng khiến người đi thuê gần như không còn khoảng đệm tài chính nếu chẳng may bị giảm thu nhập hay mất việc.
+- **Khách hàng vay vượt quá khả năng trả nợ (Đòn bẩy quá đà)**: Những người vay khoản tiền lớn hơn 70% thu nhập một năm (LTI > 0.70) có tỷ lệ vỡ nợ lên tới **87.50%**. Đặc biệt, nếu tổng các khoản nợ phải trả hàng tháng chiếm trên 80% thu nhập (DTI > 0.80), tỷ lệ vỡ nợ gần như tuyệt đối: **93.33%**.
+- **Khách hàng từng có vết nợ xấu trong quá khứ**: Khách hàng từng có lịch sử nợ xấu (`default = Y`) ghi nhận tỷ lệ nợ xấu ở khoản vay hiện tại là **37.81%**, cao gấp **2.06 lần** so với người có lịch sử tín dụng trong sạch.
+- **Khách hàng ở hai đầu độ tuổi**: Nhóm cao tuổi 61–70 tuổi có nợ xấu cao nhất toàn danh mục (**29.82%**), tiếp theo là nhóm người trẻ 20–30 tuổi (**22.21%**). Người trẻ thì công việc và thói quen tích lũy chưa vững, còn người lớn tuổi thì thu nhập sụt giảm sau hưu trí trong khi chi phí y tế lại phát sinh bất ngờ.
+- **Khách hàng vay để đảo nợ hoặc trả viện phí**: Tỷ lệ nợ xấu lần lượt là **28.59%** và **26.70%**, phản ánh tình trạng dòng tiền đã rất căng thẳng từ trước khi nộp hồ sơ vay.
+- **Khách hàng mở quá nhiều tài khoản nợ cùng lúc**: Những ai đang phải gánh từ 7–8 tài khoản nợ cùng lúc có tỷ lệ nợ xấu chạm đỉnh **24.13%**, do dòng tiền bị phân tán và rất dễ quên lịch thanh toán.
+
+#### 2. Mục đích vay vốn — Dòng tiền đi về đâu quyết định rủi ro tới đó
+Mục đích vay (`loan_intent`) phản ánh trực tiếp áp lực tài chính và động cơ sử dụng tiền của khách hàng:
+- 🚨 **Nhóm rủi ro cao — Vay đảo nợ (28.59%) & Vay y tế (26.70%)**: Khách hàng tìm đến vay đảo nợ (hợp nhất nợ) thường là lúc họ đã nợ nhiều nơi và sắp đứt thanh khoản. Vay y tế là cú sốc ngoài dự kiến, vừa tốn kém vừa làm sụt giảm khả năng lao động.
+- ⚠️ **Nhóm rủi ro trung bình — Vay sửa nhà (26.10%) & Vay tiêu dùng cá nhân (19.89%)**: Các khoản chi tiêu mang tính tùy hứng, rất dễ phát sinh chi phí vượt dự toán ban đầu.
+- 🟢 **Nhóm an toàn nhất — Vay đi học (17.22%) & Vay kinh doanh (14.31%)**: Đây là hai mục đích vay lành mạnh nhất. Khi vay tiền để làm ăn sinh lời hoặc nâng cao chuyên môn để tăng thu nhập, người vay luôn có kế hoạch trả nợ bài bản và ý thức bảo vệ uy tín cao nhất.
+
+#### 3. Tỷ lệ LTI và DTI — Khi nào gánh nặng nợ biến thành thảm họa?
+Nếu phải chọn 2 thước đo quan trọng nhất quyết định số phận một khoản vay, đó chắc chắn là **LTI (Khoản vay / Thu nhập)** và **DTI (Tổng nghĩa vụ nợ / Thu nhập)**:
+- Với những khoản vay nhỏ gọn (LTI < 0.10), nợ xấu chỉ vỏn vẹn **11.21%**. Ở mức trung bình ngân hàng hay duyệt (LTI 0.20 – 0.30), nợ xấu giữ ở mức cân bằng **22.09%**. Nhưng khi LTI vượt quá 0.70, tỷ lệ vỡ nợ lập tức vọt lên **87.50%**.
+- Về dòng tiền hàng tháng: Khách hàng trả nợ tốt chỉ dành trung bình **14.9%** thu nhập để trả nợ. Ngược lại, nhóm vỡ nợ phải gánh trung bình tới **24.7%** thu nhập.
+- **Ranh giới chịu đựng**: Một khi nghĩa vụ nợ ngốn từ **25% – 30% thu nhập hàng tháng**, người vay không còn tiền dự phòng. Bất kỳ một biến cố nhỏ nào (ốm đau, giảm giờ làm, lạm phát) cũng đủ biến họ thành nợ xấu. Nếu DTI vượt quá 0.80, tỷ lệ nợ xấu chạm mức **93.33%**.
+
+#### 4. Hình thức nhà ở và hợp đồng việc làm — Đâu mới là điểm tựa an toàn thực sự?
+- **Nơi ở tạo ra sự cách biệt rất lớn**: Người sở hữu nhà riêng (`OWN`) chỉ có **7.47%** nợ xấu, người đang trả góp nhà (`MORTGAGE`) có **12.57%**, còn người thuê nhà (`RENT`) lên tới **31.57%**. Căn nhà không chỉ là nơi ở, mà là một "tấm đệm tài sản" giúp người vay xoay xở khi gặp khó khăn mà không để bị kiện tụng hay mất uy tín.
+- **Loại hợp đồng lao động hầu như không tạo ra sự phân hóa**: Toàn thời gian (21.57%), bán thời gian (21.63%), làm tự do (22.49%) hay đang tìm việc (22.67%) đều có tỷ lệ nợ xấu xấp xỉ nhau (~21% – 22%). Điều này mang lại một bài học kinh nghiệm rất đắt: **Dòng tiền thực tế đều đặn đổ vào tài khoản có giá trị thẩm định lớn hơn nhiều so với tên gọi của một bản hợp đồng lao động trên giấy tờ**.
+
+#### 5. Lịch sử tín dụng — Vết nhơ quá khứ và sự thật về thâm niên
+- **Thói quen thanh toán có tính lặp lại rất cao**: Người từng dính nợ xấu (`default = Y`) có nguy cơ vỡ nợ tiếp theo cao gấp **2.06 lần** (từ 18.39% vọt lên 37.81%). Người từng trễ hạn từ 3 đến 5 lần là dấu hiệu của việc thiếu kỷ luật tài chính nghiêm trọng.
+- **Thâm niên tín dụng dài chưa hẳn đã an toàn**: Trái với cảm tính ban đầu rằng "thâm niên 25–30 năm chắc chắn uy tín", dữ liệu lại cho thấy nhóm này có tỷ lệ nợ xấu lên đến **28.71%**, cao hơn nhóm thâm niên ngắn 0–10 năm (20.65%). Lý do là nhóm này tập trung phần lớn khách hàng trên 60 tuổi — những người đã rời khỏi thị trường lao động, thu nhập sụt giảm và phải đối mặt với chi phí y tế lớn.
+
+#### 6. So sánh 3 thị trường — Sự tương đồng giữa Mỹ, Anh và Canada
+Khi chạy kiểm định trên 3 quốc gia, dữ liệu cho thấy kết quả đồng nhất đáng kinh ngạc:
+- Mỹ: **21.86%**
+- Vương Quốc Anh: **21.73%**
+- Canada: **21.86%**
+Mức chênh lệch tối đa giữa 3 quốc gia chỉ là **0.13 điểm phần trăm**. Điều này khẳng định hành vi tài chính tiêu dùng ở các nền kinh tế phát triển có chung quy luật, cho phép NovaBank tự tin triển khai chung một bộ khung chấm điểm và chính sách tín dụng cho cả 3 thị trường mà không cần tinh chỉnh cục bộ tốn kém.
+
+#### 7. Xếp hạng Grade G và quyết định loại bỏ biến gây rò rỉ dữ liệu (Target Leakage)
+- Bảng xếp hạng tín dụng cũ bộc lộ một lỗ hổng thẩm định chết người: Trong khi Grade A (9.96%) và Grade B (16.28%) rất an toàn, thì **Grade G ghi nhận tỷ lệ vỡ nợ lên tới 98.44%**! Cứ 100 hồ sơ Grade G thì ngân hàng mất trắng hơn 98 hồ sơ. Nhóm dự án áp dụng ngay quy tắc dừng cấp vốn lập tức cho nhóm này.
+- **Vì sao loại bỏ `loan_grade` khỏi mô hình Machine Learning?**  
+  `loan_grade` là nhãn phân loại nội bộ được chuyên viên gán sau quy trình xét duyệt cũ. Nếu đưa vào huấn luyện, mô hình sẽ gặp lỗi **rò rỉ mục tiêu (Target Data Leakage)** — hệ thống chỉ học vẹt lại quy tắc cũ mà không khám phá được các mối tương quan tài chính độc lập, làm mất đi giá trị gia tăng của AI.
+
+#### 8. Đối sánh hai nhóm khách hàng: An toàn vs Rủi ro cao
+Từ các phân tích trên, chân dung hai nhóm khách hàng hiện lên rất trực quan:
+- **Khách hàng an toàn (Ưu tiên giải ngân tự động)**: Thu nhập ổn định trung bình $70,800/năm, khoản vay vừa tầm ($9,200), tỷ lệ vay LTI < 0.20, nợ DTI < 0.30. Có nhà riêng hoặc đang trả góp nhà, vay để làm ăn hoặc học tập, lịch sử tín dụng sạch, dùng thẻ tín dụng chừng mực (20%–30%), nằm trong độ tuổi chín muồi sự nghiệp 40–50 tuổi.
+- **Khách hàng rủi ro cao (Cần chặn lọc hoặc thẩm định kỹ)**: Thu nhập thấp hơn ($49,100/năm) nhưng lại muốn vay nhiều hơn ($10,900), đòn bẩy LTI > 0.50, DTI > 0.40–0.60. Đang thuê nhà, vay để đảo nợ hoặc trả viện phí, từng có nợ xấu cũ, dùng cạn trên 80% hạn mức thẻ, thuộc nhóm quá trẻ (< 25) hoặc lớn tuổi (> 60).
 
 ---
 
-### 2.2 Quy Trình 4 Bước: Từ Dữ Liệu Thô Đến Quyết Định Phê Duyệt
+### 2.2 Những góc khuất kỹ thuật phát hiện thêm trong quá trình làm
 
-Để đưa dữ liệu vào thực tế kinh doanh mà không bị cảm tính, dự án xây dựng quy trình khép kín gồm 4 bước:
+Bên cạnh các bài toán kinh doanh lớn, quá trình đào sâu dữ liệu giúp nhóm phát hiện ra 5 góc khuất kỹ thuật rất đắt giá:
+
+1. **"Điểm ngọt" 20% – 30% của hạn mức thẻ tín dụng (Credit Utilization Sweet Spot)**:  
+   Không phải cứ không quẹt thẻ là tốt (dùng dưới 10% nợ xấu vẫn ở mức 21.84% vì hồ sơ tín dụng quá mỏng). Điểm ngọt lý tưởng nhất là **20% – 30%** (nợ xấu thấp nhất: **21.11%**), chứng tỏ khách hàng có dòng tiền luân chuyển đều đặn và có thói quen trả nợ đúng hạn. Ngược lại, nếu khách hàng quẹt cạn trên 80% – 90% hạn mức thẻ, đó là tín hiệu báo động đỏ cho thấy họ đang cạn tiền mặt và phải sống dựa vào tín dụng quay vòng.
+2. **Độ lệch do thiếu biến đệm tài sản ở nhóm thế chấp nhà (Mortgage Anomaly & Omitted Variable Bias)**:  
+   Nhóm vay mua nhà (`MORTGAGE`) có tỷ lệ nợ xấu thực tế rất thấp (12.57%), nhưng các thuật toán phân loại sơ bộ hay đoán nhầm họ là rủi ro (tỷ lệ False Positive cao). Khi tìm hiểu kỹ, nhóm nhận ra dữ liệu lịch sử thiếu trường thông tin về giá trị căn nhà và tỷ lệ vay trên giá trị tài sản (LTV). Vì thiếu biến đệm tài sản này, thuật toán đánh giá họ khắt khe như người đi thuê. Nhận định này dẫn tới quyết định nghiệp vụ quan trọng: **Không bao giờ từ chối tự động nhóm MORTGAGE ở vùng ranh giới điểm**, mà chuyển sang chuyên viên thẩm định để đối soát giá trị tài sản thực tế.
+3. **Hiện tượng phân tán tài khoản tín dụng (Account Fragmentation)**:  
+   Người mở từ 7 đến 8 tài khoản tín dụng có tỷ lệ nợ xấu cao nhất (**24.13%**). Họ rơi vào cảnh "giật gấu vá vai", mở quá nhiều khoản vay nhỏ lẻ dẫn đến mất kiểm soát dòng tiền và hay quên lịch trả nợ.
+4. **Chuẩn hóa FICO bằng Log-Odds Scaling (Base Score 600, PDO = 20)**:  
+   Để hệ thống dễ hiểu và thân thiện với nhân viên tín dụng lẫn khách hàng, nhóm không để kết quả ở dạng xác suất khô khan 0.15 hay 0.72. Toàn bộ xác suất được quy đổi sang thang điểm FICO 300–850 chuẩn quốc tế qua tỷ lệ cược Log-Odds: Cứ mỗi 20 điểm tăng thêm, tỷ lệ khách hàng trả nợ tốt tăng gấp đôi.
+
+---
+
+### 2.3 Chu trình 4 bước: Từ dữ liệu phân tích đến quyết định giải ngân
+
+Để những con số phân tích không chỉ nằm lại trên giấy, nhóm thiết kế một chu trình khép kín 4 bước đưa dữ liệu vào thẳng luồng xét duyệt thực tế:
 
 ```
-[Bước 1: Quan sát Thực Tế] ──► [Bước 2: Tìm Nguyên Nhân] ──► [Bước 3: Đặt Quy Tắc] ──► [Bước 4: Tự Động Hóa]
-   Phân tích từng chỉ số       Hiểu lý do khách hàng         Thiết lập trần rủi ro,       Dùng Machine Learning
-   và tỷ lệ nợ xấu thực tế.    mất khả năng trả nợ.          ngưỡng an toàn & lãi suất.   chấm điểm & phân luồng.
+[Bước 1: Khám phá Dữ liệu (EDA)] ──► [Bước 2: Bóc tách Căn nguyên] ──► [Bước 3: Dựng Hàng rào Chính sách] ──► [Bước 4: Tự động hóa bằng Máy]
+    Đào sâu từng chỉ số và             Hiểu rõ áp lực dòng tiền          Thiết lập trần đòn bẩy và              Mô hình LightGBM chấm điểm
+    tỷ lệ nợ xấu thực tế.              của từng nhóm khách hàng.         bộ quy tắc an toàn (Rules).            và phân luồng tự động trong 1 phút.
 ```
 
-1. **Bước 1 — Khám phá dữ liệu thực tế (EDA)**: So sánh tỷ lệ nợ xấu ở từng nhóm chỉ số (ví dụ: người thuê nhà vs người có nhà; vay để đi học vs vay để trả nợ cũ).
-2. **Bước 2 — Xác định nguyên nhân gốc rễ (Root Cause)**: Tìm hiểu bản chất vì sao nhóm đó lại có rủi ro cao (ví dụ: gánh nặng tiền thuê nhà cố định hàng tháng khiến người đi thuê dễ hụt tiền khi ốm đau, mất việc).
-3. **Bước 3 — Thiết lập chính sách & ngưỡng an toàn (Credit Policy)**: Quy định rõ ranh giới an toàn cho ngân hàng (ví dụ: nếu tiền trả nợ chiếm trên 25% thu nhập thì phải chuyển sang kiểm tra kỹ; nếu nợ chiếm trên 60% thu nhập thì từ chối ngay).
-4. **Bước 4 — Tự động hóa qua Mô hình & Thang điểm (Scorecard)**: Đưa toàn bộ các quy luật này vào mô hình học máy LightGBM để tính xác suất vỡ nợ, quy đổi thành điểm tín dụng 300–850 và ra quyết định chỉ trong vài giây.
+1. **Bước 1 — Khám phá dữ liệu thực tế (EDA)**: Tìm ra các biến số có tính phân hóa mạnh nhất giữa người trả nợ tốt và người nợ xấu.
+2. **Bước 2 — Xác định nguyên nhân gốc rễ (Root Cause)**: Bóc tách bản chất kinh tế đằng sau các con số (chi phí nhà ở cố định, gánh nặng nợ, cú sốc y tế).
+3. **Bước 3 — Thiết lập chính sách & ngưỡng an toàn (Credit Policy)**: Định hình các quy tắc nghiệp vụ rõ ràng (chặn cứng khi DTI $\ge$ 0.6 hoặc LTI $\ge$ 0.8; hạ bậc thẩm định khi trễ hạn $\ge$ 3 lần).
+4. **Bước 4 — Tự động hóa qua Mô hình & Thang điểm (Scorecard)**: Đóng gói toàn bộ logic vào mô hình LightGBM và hệ thống quy đổi điểm FICO, đưa ra quyết định phê duyệt chỉ trong vài giây.
 
 ---
 
-### 2.3 Nguyên Tắc Cân Bằng Giữa Tăng Trưởng Doanh Thu Và An Toàn Vốn
+### 2.4 Bài toán cân bằng giữa tăng trưởng doanh số và an toàn vốn
 
-Trong ngân hàng, **không thể chỉ duyệt hồ sơ siêu an toàn** vì như vậy sẽ mất hết khách hàng và không có doanh thu. Ngược lại, nếu nới lỏng để tăng trưởng nóng thì nợ xấu sẽ ăn hết lợi nhuận.
+Một hệ thống thẩm định tín dụng giỏi không phải là hệ thống từ chối thật nhiều để giữ nợ xấu bằng 0, vì làm như vậy ngân hàng sẽ tự bóp nghẹt doanh thu. Trọng tâm của bài toán là **tìm điểm cân bằng tối ưu giữa tăng trưởng và an toàn vốn**:
 
-Hệ thống áp dụng nguyên tắc điều hành cân bằng:
-- **Khách hàng an toàn (Điểm cao)**: Đơn giản hóa thủ tục, duyệt ngay trong 1 phút, giảm lãi suất để giữ chân khách hàng.
-- **Khách hàng rủi ro vừa phải (Điểm trung bình)**: Không từ chối vội, mà đưa sang luồng xem xét: chuyên viên có thể yêu cầu giảm số tiền vay, kéo dài kỳ hạn để giảm số tiền phải trả mỗi tháng, hoặc áp dụng mức lãi suất bù trừ rủi ro.
-- **Khách hàng rủi ro quá cao (Điểm thấp hoặc vi phạm trần an toàn)**: Từ chối dứt khoát ngay từ đầu để bảo toàn vốn.
-
----
-
-## 3. Phân Tích Thực Tế & Chính Sách Tín Dụng Theo Từng Nhóm Chỉ Số
-
-Dưới đây là phân tích chi tiết cho 5 nhóm chỉ số đo lường rủi ro khách hàng. Mỗi nhóm được trình bày rõ ràng: **Dữ liệu thực tế cho thấy gì $\rightarrow$ Bản chất vì sao lại như vậy $\rightarrow$ Ngân hàng áp dụng chính sách gì**.
+- **Khách hàng an toàn (Điểm FICO > 643)**: Tối ưu trải nghiệm, phê duyệt tự động 100% trong 1 phút, giảm lãi suất để giữ chân khách hàng tốt.
+- **Khách hàng ở vùng ranh giới (Điểm FICO 617 – 643)**: Không từ chối vội. Hệ thống chuyển hồ sơ cho chuyên viên tín dụng để đàm phán lại: giảm số tiền vay, kéo dài kỳ hạn để giảm số tiền phải trả mỗi tháng, hoặc áp dụng mức lãi suất bù trừ rủi ro.
+- **Khách hàng rủi ro cao (Điểm FICO $\le$ 616 hoặc vi phạm quy tắc chặn)**: Kiên quyết từ chối ngay từ đầu để bảo toàn nguồn vốn.
 
 ---
 
-### 3.1 Nhóm Khả Năng Tài Chính & Đòn Bẩy Nợ
+## 3. Chính Sách Tín Dụng & Khung Thẩm Định Theo Từng Nhóm Chỉ Số
+
+Từ các phát hiện trên, toàn bộ thông tin thẩm định được chia thành **5 nhóm chỉ số trọng yếu** để thiết lập chính sách xử lý cụ thể:
+
+---
+
+### 3.1 Nhóm Khả năng tài chính & Đòn bẩy nợ
 
 Nhóm chỉ số này đo lường sức khỏe tài chính và mức độ gánh nặng nợ của người vay:
 - **Thu nhập hàng năm** (`person_income`) & **Khoản vay** (`loan_amnt`).
@@ -163,34 +216,19 @@ Tỷ lệ nợ xấu (%) theo Tỷ lệ Khoản vay / Thu nhập (LTI)
       └────────────────────────────────────────────────► Mức độ đòn bẩy (LTI)
 ```
 
-#### Dữ liệu thực tế cho thấy:
-- **Khoản vay nhỏ so với thu nhập (LTI < 0.10)**: Tỷ lệ nợ xấu chỉ **11.21%** (rất an toàn).
-- **Khoản vay ở mức trung bình (LTI 0.20 – 0.30)**: Tỷ lệ nợ xấu là **22.09%** (mức bình thường của danh mục).
-- **Khoản vay quá lớn so với thu nhập (LTI > 0.70)**: Tỷ lệ nợ xấu vọt lên **87.50%**!
-- **Tỷ lệ nghĩa vụ trả nợ hàng tháng trên thu nhập**: Khách hàng trả nợ tốt chỉ dùng trung bình **14.9%** thu nhập để trả nợ. Trong khi đó, nhóm vỡ nợ phải dùng tới **24.7%** thu nhập. Đặc biệt, nếu tổng nợ vượt quá **60% - 80% thu nhập (DTI > 0.8)**, tỷ lệ nợ xấu lên đến **93.33%**.
-
-#### Bản chất thực tế:
-Khi một người phải dành hơn 25% – 30% thu nhập hàng tháng chỉ để trả nợ, họ gần như không còn tiền dự phòng. Bất kỳ sự cố nào như ốm đau, xe hỏng, giảm lương hoặc vật giá tăng đều khiến họ đứt dòng tiền và buộc phải dừng trả nợ ngân hàng.
-
-#### Chính sách tín dụng áp dụng:
-1. **Từ chối thẳng (Quy tắc Knock-out)**:
-   - Hồ sơ có **LTI $\ge$ 0.8** hoặc **DTI $\ge$ 0.6** bị từ chối tự động ngay lập tức, không cần xét các yếu tố khác.
-2. **Chuyển sang thẩm định thủ công (Quy tắc Soft Downgrade)**:
-   - Nếu **LTI $\ge$ 0.3** hoặc **DTI $\ge$ 0.4**, hồ sơ không được duyệt tự động mà chuyển sang chuyên viên để xem xét giảm số tiền vay.
-3. **Cảnh báo hồ sơ ngoại lệ**:
-   - Khách có thu nhập > $150,000/năm hoặc khoản vay > $25,000 cần xác minh chứng từ sao kê thuế/lương để tránh gian lận.
+- **Thực tế danh mục**: Khoản vay nhỏ so với thu nhập (LTI < 0.10) chỉ có **11.21%** nợ xấu. Nhưng khi LTI vượt quá 0.70, nợ xấu vọt lên **87.50%**. Tương tự, nếu tổng nghĩa vụ trả nợ hàng tháng ngốn quá 60% – 80% thu nhập (DTI > 0.80), tỷ lệ nợ xấu chạm mức **93.33%**.
+- **Chính sách áp dụng**:
+  - *Chặn cứng (Knock-out)*: Tự động từ chối nếu LTI $\ge$ 0.8 hoặc DTI $\ge$ 0.6.
+  - *Hạ bậc xem xét (Soft Review)*: Nếu LTI $\ge$ 0.3 hoặc DTI $\ge$ 0.4, chuyển chuyên viên đề xuất giảm số tiền vay hoặc kéo dài kỳ hạn.
+  - *Cảnh báo hồ sơ ngoại lệ*: Hồ sơ có thu nhập > $150,000/năm hoặc khoản vay > $25,000 bắt buộc phải kiểm tra sao kê thuế/lương để tránh gian lận.
 
 ---
 
-### 3.2 Nhóm Lịch Sử Tín Dụng & Hành Vi Trả Nợ
+### 3.2 Nhóm Lịch sử tín dụng & Kỷ luật thanh toán
 
-Nhóm chỉ số này đo lường mức độ uy tín và tính kỷ luật tài chính trong quá khứ:
-- **Tiền sử nợ xấu** (`cb_person_default_on_file`): Đã từng bùng nợ hoặc bị ghi nhận nợ xấu chưa?
-- **Số lần chậm trả nợ** (`past_delinquencies`): Số lần quá hạn thanh toán.
-- **Tỷ lệ dùng hạn mức thẻ tín dụng** (`credit_utilization_ratio`).
-- **Thâm niên tín dụng** (`cb_person_cred_hist_length`) & **Số tài khoản đang mở** (`open_accounts`).
+Nhóm chỉ số này đo lường uy tín và tính kỷ luật tài chính tích lũy qua thời gian:
 
-| Chỉ số tín dụng | Quan sát từ dữ liệu | Đánh giá mức độ rủi ro |
+| Chỉ số tín dụng | Quan sát từ dữ liệu | Đánh giá & Rủi ro |
 |---|---|---|
 | **Chưa từng có nợ xấu** | Nợ xấu hiện tại: **18.39%** | Đáng tin cậy, thói quen trả nợ tốt |
 | **Đã từng dính nợ xấu** | Nợ xấu hiện tại: **37.81%** (Cao gấp **2.06 lần**) | **Rủi ro rất cao**, tính kỷ luật kém |
@@ -199,19 +237,14 @@ Nhóm chỉ số này đo lường mức độ uy tín và tính kỷ luật tà
 | **Mở 7 – 8 tài khoản nợ cùng lúc** | Nợ xấu đạt đỉnh: **24.13%** | Phải xoay xở trả nợ nhiều nơi, dễ mất kiểm soát |
 | **Thâm niên tín dụng dài (25–30 năm)**| Nợ xấu tăng lên **28.71%** | Nhóm khách hàng lớn tuổi, thu nhập giảm sau nghỉ hưu |
 
-#### Bản chất thực tế:
-- Người từng để nợ xấu trong quá khứ thường có xu hướng tái phạm cao gấp đôi người khác.
-- Dùng thẻ tín dụng ở mức 20-30% chứng tỏ khách hàng có tiền nhưng vẫn dùng thẻ để tiện lợi. Nhưng nếu quẹt đến 80-90% hạn mức thì đó là dấu hiệu báo động họ đang kẹt tiền mặt trầm trọng.
-- Thâm niên tín dụng dài nghe có vẻ uy tín, nhưng dữ liệu lại cho thấy nhóm này trùng với khách hàng trên 60 tuổi — những người đã nghỉ hưu và có phát sinh chi phí y tế lớn.
-
-#### Chính sách tín dụng áp dụng:
-1. **Khóa duyệt tự động với khách có tiền sử nợ xấu**: Hồ sơ có tiền sử nợ xấu (`default = Y`) kết hợp với chậm trả $\ge$ 5 lần hoặc đòn bẩy cao sẽ bị từ chối ngay.
-2. **Quy tắc trần quá hạn**: Chậm trả $\ge$ 3 lần sẽ bị hạ từ nhóm "Duyệt" xuống nhóm "Cần xem xét lại".
-3. **Ưu đãi theo tỷ lệ dùng thẻ**: Khách hàng duy trì tỷ lệ dùng thẻ 20%–30% được cộng điểm tín dụng và hưởng lãi suất vay tốt hơn.
+- **Chính sách áp dụng**:
+  - Khóa duyệt tự động nếu khách có tiền sử nợ xấu (`default = Y`) kèm theo chậm trả $\ge$ 5 lần.
+  - Khách hàng chậm trả từ 3–4 lần bị hạ từ luồng "Duyệt" xuống "Cần xem xét lại".
+  - Khách hàng duy trì tỷ lệ dùng thẻ 20%–30% được cộng điểm FICO và hưởng ưu đãi lãi suất.
 
 ---
 
-### 3.3 Nhóm Nơi Ở & Tài Sản Bảo Đảm
+### 3.3 Nhóm Nơi ở & Tài sản bảo đảm
 
 Nơi ở (`person_home_ownership`) phản ánh nền tảng tài sản tích lũy và gánh nặng chi phí sinh hoạt cố định:
 
@@ -221,93 +254,74 @@ Nơi ở (`person_home_ownership`) phản ánh nền tảng tài sản tích lũ
 | **Đang trả góp mua nhà (MORTGAGE)**| **12.57%** | Thấp hơn **9.25%** | An toàn, có ý thức giữ nhà |
 | **Đang thuê nhà (RENT)** | **31.57%** | Cao hơn **9.75%** | **Nhóm rủi ro cao nhất (Gấp 4.2 lần có nhà)**|
 
-#### Bản chất thực tế:
-- **Người có nhà riêng (`OWN`)**: Họ có tài sản tích lũy lớn. Nếu gặp khó khăn ngắn hạn, họ có nhiều cách xoay xở (bán bớt tài sản, vay thế chấp...) nên hiếm khi để vỡ nợ một khoản vay tiêu dùng nhỏ.
-- **Người đi thuê nhà (`RENT`)**: Chiếm tỷ trọng đông nhất trong số người nộp hồ sơ, nhưng tỷ lệ nợ xấu lên đến **31.57%**. Tiền thuê nhà là khoản chi cố định không thể cắt giảm; khi bị ốm đau hay giảm thu nhập, họ lập tức không còn tiền trả nợ ngân hàng.
-- **Người vay mua nhà (`MORTGAGE`)**: Tỷ lệ nợ xấu thực tế thấp (12.57%), nhưng mô hình phân tích hay báo nhầm là rủi ro vì bộ dữ liệu hiện tại thiếu thông tin về giá trị căn nhà và số vốn tự có của khách.
-
-#### Chính sách tín dụng áp dụng:
-1. **Luồng ưu tiên cho người có nhà riêng (`OWN`)**: Hạn mức phê duyệt cao hơn, quy trình cấp vốn nhanh vì có điểm tựa tài sản.
-2. **Siết chặt điều kiện với người thuê nhà (`RENT`)**: Nếu người thuê nhà có khoản nợ hàng tháng tiệm cận 20% thu nhập, bắt buộc phải sao kê tài khoản 6 tháng và chứng minh lịch sử thanh toán tiền nhà đúng hạn.
-3. **Thẩm định thủ công với nhóm thế chấp (`MORTGAGE`)**: Không tự động từ chối hồ sơ thế chấp ở vùng ranh giới điểm số, mà chuyển chuyên viên tín dụng kiểm tra giá trị căn nhà thực tế để tránh bỏ lỡ khách hàng tốt.
+- **Chính sách áp dụng**:
+  - *Luồng ưu tiên cho người có nhà riêng (`OWN`)*: Cấp hạn mức cao hơn, giải ngân nhanh vì có điểm tựa tài sản.
+  - *Siết điều kiện với người thuê nhà (`RENT`)*: Nếu nợ hàng tháng vượt 20% thu nhập, yêu cầu bổ sung sao kê 6 tháng và lịch sử thanh toán tiền thuê nhà đúng hạn.
+  - *Thẩm định linh hoạt với nhóm thế chấp (`MORTGAGE`)*: Không tự động từ chối hồ sơ thế chấp ở vùng ranh giới điểm, mà chuyển chuyên viên kiểm tra giá trị thực của căn nhà để tránh bỏ lỡ khách hàng tốt.
 
 ---
 
-### 3.4 Nhóm Mục Đích Vay Vốn
+### 3.4 Nhóm Mục đích sử dụng vốn
 
-Mục đích vay (`loan_intent`) thể hiện động cơ sử dụng tiền và khả năng hoàn trả:
+Mục đích vay (`loan_intent`) phản ánh động cơ vay và tính khả thi của nguồn tiền hoàn trả:
 
 ```
 Tỷ lệ nợ xấu theo Mục đích vay:
-1. Vay hợp nhất nợ (Đảo nợ) ──► 28.59%  [RỦI RO NHẤT: Bội chi & kẹt nợ từ trước]
+1. Vay hợp nhất nợ (Đảo nợ) ──► 28.59%  [RỦI RO NHẤT: Kẹt nợ từ trước, mất thanh khoản]
 2. Vay chi trả y tế           ──► 26.70%  [Sự cố sức khỏe ngoài ý muốn, giảm thu nhập]
 3. Vay sửa chữa nhà           ──► 26.10%  [Dễ phát sinh chi phí vượt dự toán]
 4. Vay tiêu dùng cá nhân      ──► 19.89%  [Mức rủi ro trung bình]
-5. Vay học tập                ──► 17.22%  [Đầu tư nâng cao kiến thức, việc làm tốt hơn]
+5. Vay học tập                ──► 17.22%  [Đầu tư nâng cao kiến thức, tăng thu nhập tương lai]
 6. Vay kinh doanh             ──► 14.31%  [AN TOÀN NHẤT: Có phương án sinh lời cụ thể]
 ```
 
-#### Bản chất thực tế:
-- **Vay đảo nợ / Hợp nhất nợ (28.59%)**: Khách hàng tìm đến gói này khi đã nợ nhiều nơi và không còn khả năng xoay xở. Đây là dấu hiệu của vòng luẩn quẩn nợ nần sắp đổ vỡ.
-- **Vay y tế (26.70%)**: Khủng hoảng tài chính thụ động do bệnh tật bất ngờ, thường kéo theo việc người vay bị giảm khả năng lao động và mất nguồn thu nhập.
-- **Vay kinh doanh (14.31%) & Vay học tập (17.22%)**: Khoản tiền vay được dùng để tạo ra dòng tiền mới hoặc nâng cao thu nhập tương lai, do đó khách hàng có kế hoạch chuẩn bị và ý thức trả nợ tốt nhất.
-
-#### Chính sách tín dụng áp dụng (Định giá lãi suất theo mục đích vay):
-1. **Cộng thêm lãi suất bù trừ rủi ro**:
-   - Vay hợp nhất nợ / đảo nợ: **Cộng thêm +1.5% đến +2.0%** vào lãi suất sàn để bù đắp xác suất nợ xấu cao.
-   - Vay y tế: Yêu cầu thẩm định nguồn thu nhập thứ hai hoặc người đồng trả nợ.
-2. **Ưu đãi lãi suất cho mục đích sinh lời**:
-   - Vay học tập & kinh doanh: **Giảm 1.0% lãi suất** nếu khách hàng có kế hoạch kinh doanh hoặc chứng chỉ đào tạo rõ ràng.
+- **Chính sách áp dụng (Định giá lãi suất theo rủi ro mục đích)**:
+  - *Cộng thêm lãi suất bù trừ rủi ro*: Vay hợp nhất nợ/đảo nợ cộng thêm **+1.5% đến +2.0%** vào lãi suất sàn; vay y tế yêu cầu thẩm định người đồng trả nợ.
+  - *Ưu đãi lãi suất cho mục đích sinh lời*: Vay học tập và kinh doanh được **giảm 1.0% lãi suất** nếu có kế hoạch kinh doanh hoặc chứng chỉ đào tạo rõ ràng.
 
 ---
 
-### 3.5 Nhóm Đặc Điểm Khách Hàng (Tuổi, Việc Làm, Địa Bàn)
+### 3.5 Nhóm Đặc điểm khách hàng (Độ tuổi, Việc làm, Quốc gia)
 
-#### 1. Mối liên hệ giữa Độ tuổi và Rủi ro (Đường cong chữ U):
-- **Nhóm 20–30 tuổi (Nợ xấu 22.21%)**: Mới đi làm, thu nhập chưa ổn định, ít tích lũy và thói quen chi tiêu chưa chặt chẽ.
-- **Nhóm 41–50 tuổi (Nợ xấu thấp nhất 20.40% — Điểm an toàn nhất)**: Giai đoạn thu nhập đạt đỉnh cao trong sự nghiệp, cuộc sống ổn định và tài sản tích lũy vững chắc.
-- **Nhóm 61–70 tuổi (Nợ xấu cao nhất 29.82% — Vùng rủi ro cao)**: Đã nghỉ hưu, thu nhập cố định bị giảm sút, trong khi viện phí và chi phí chăm sóc sức khỏe gia tăng.
-- **Chính sách**: Với khách hàng trên 60 tuổi, ngân hàng rút ngắn kỳ hạn vay tối đa (không quá 36 tháng) hoặc yêu cầu có con cái cùng đứng tên bảo lãnh.
-
-#### 2. Loại hình hợp đồng lao động:
-- Dữ liệu cho thấy: Nhân viên toàn thời gian (nợ xấu 21.57%), bán thời gian (21.63%), kinh doanh tự do (22.49%) và thất nghiệp (22.67%) **không có sự chênh lệch đáng kể**.
-- **Chính sách**: Ngân hàng không phân biệt đối xử với người làm tự do (Freelancer/Self-employed), mà tập trung vào **dòng tiền thực tế đổ về tài khoản hàng tháng** thay vì đòi hỏi hợp đồng lao động dài hạn.
-
-#### 3. Địa bàn sinh sống (Mỹ, Anh, Canada):
-- Tỷ lệ nợ xấu tại 3 quốc gia gần như bằng nhau tuyệt đối: Mỹ (21.86%), Anh (21.73%), Canada (21.86%).
-- **Chính sách**: Mô hình rủi ro của NovaBank mang tính chuẩn mực và có thể áp dụng đồng nhất xuyên biên giới mà không cần thay đổi tiêu chí theo từng quốc gia.
+1. **Mối liên hệ độ tuổi (Đường cong chữ U)**:
+   - Nhóm 20–30 tuổi (nợ xấu 22.21%): Thu nhập chưa ổn định, ít tích lũy.
+   - Nhóm 41–50 tuổi (nợ xấu thấp nhất 20.40%): Thu nhập đạt đỉnh cao sự nghiệp, tài sản vững chắc nhất.
+   - Nhóm 61–70 tuổi (nợ xấu cao nhất 29.82%): Đã nghỉ hưu, thu nhập giảm sút trong khi chi phí sức khỏe tăng.
+   - *Chính sách*: Khách hàng trên 60 tuổi giới hạn kỳ hạn vay tối đa 36 tháng hoặc yêu cầu con cái cùng đứng tên bảo lãnh.
+2. **Hình thức việc làm**: Dữ liệu cho thấy toàn thời gian (21.57%), bán thời gian (21.63%), tự do (22.49%) không khác biệt nhiều. Chính sách ngân hàng tập trung vào **dòng tiền thực đổ về tài khoản hàng tháng** thay vì cứng nhắc yêu cầu hợp đồng biên chế.
+3. **Địa bàn sinh sống**: Mỹ (21.86%), Anh (21.73%), Canada (21.86%) tương đồng tuyệt đối. Chính sách tín dụng được áp dụng chuẩn hóa xuyên biên giới.
 
 ---
 
-### 3.6 Bảng Quy Tắc Thẩm Định & Phân Luồng Hồ Sơ (Business Rules)
+### 3.6 Ma trận quy tắc phân luồng hồ sơ (Knock-out, Soft Review, Outlier Flags)
 
-Toàn bộ các phát hiện trên được cụ thể hóa thành 2 tầng quy tắc cứng trong hệ thống xét duyệt tự động:
+Toàn bộ các phát hiện trên được cụ thể hóa thành 3 tầng quy tắc trong hệ thống xét duyệt tự động:
 
 | Tầng quy tắc | Điều kiện kích hoạt | Hành động của hệ thống |
 |---|---|---|
 | 🚨 **Tầng 1: Loại trừ thẳng (Knock-out)** | • Có nợ xấu cũ **VÀ** quá hạn $\ge$ 5 lần<br>• Tỷ lệ Khoản vay / Thu nhập (LTI) $\ge$ 0.8<br>• Tỷ lệ Nợ / Thu nhập (DTI) $\ge$ 0.6 | **Ép điểm số $\le 500$, trả về `REJECT` ngay**.<br>Không duyệt cho vay dưới bất kỳ hình thức nào. |
-| ⚠️ **Tầng 2: Hạ bậc xem xét (Soft Downgrade)** | • Số lần quá hạn $\ge$ 3 lần<br>• Tỷ lệ Khoản vay / Thu nhập (LTI) $\ge$ 0.3<br>• Tỷ lệ Nợ / Thu nhập (DTI) $\ge$ 0.4 | **Hạ bậc từ "Duyệt" xuống `REVIEW`**.<br>Chuyển hồ sơ sang chuyên viên để yêu cầu giảm số tiền vay hoặc bổ sung người bảo lãnh. |
+| ⚠️ **Tầng 2: Hạ bậc xem xét (Soft Review)** | • Số lần quá hạn $\ge$ 3 lần<br>• Tỷ lệ Khoản vay / Thu nhập (LTI) $\ge$ 0.3<br>• Tỷ lệ Nợ / Thu nhập (DTI) $\ge$ 0.4 | **Hạ bậc từ "Duyệt" xuống `REVIEW`**.<br>Chuyển hồ sơ sang chuyên viên để yêu cầu giảm số tiền vay hoặc bổ sung người bảo lãnh. |
 | 🔍 **Tầng 3: Cảnh báo ngoại lai (Outlier Flags)** | • Thu nhập cá nhân > $150,000/năm<br>• Khoản vay đăng ký > $25,000<br>• Nợ khác bên ngoài > $30,000 | **Bật cờ cảnh báo hồ sơ giá trị lớn**.<br>Yêu cầu chuyên viên kiểm tra chứng từ thuế để phòng ngừa khai khống thu nhập. |
 
 ---
 
-### 3.7 Lộ Trình Triển Khai Thực Tế
+### 3.7 Lộ trình triển khai chính sách vào vận hành
 
-Kế hoạch đưa các chính sách trên vào vận hành được chia làm 3 mốc rõ ràng:
+Kế hoạch đưa các chính sách trên vào vận hành thực tế được chia làm 3 giai đoạn:
 
 ```
-[Ngay lập tức: 0–30 ngày]  ──► Cắt bỏ các nhóm rủi ro cực đoan (DTI > 0.6, LTI > 0.8)
-[Ngắn hạn: 1–6 tháng]      ──► Áp dụng quy trình kiểm tra người thuê nhà & Lãi suất theo mục đích vay
+[Ngay lập tức: 0–30 ngày]  ──► Kích hoạt bộ lọc chặn cứng rủi ro cao (DTI > 0.6, LTI > 0.8)
+[Ngắn hạn: 1–6 tháng]      ──► Áp dụng quy trình thẩm định người thuê nhà & Lãi suất theo mục đích vay
 [Dài hạn: 6–12+ tháng]     ──► Tự động hóa toàn diện qua Web/API & Mở rộng sang các thị trường mới
 ```
 
-1. **Ưu tiên tức thì (0 – 30 ngày)**: Kích hoạt ngay bộ lọc chặn cứng DTI $\ge$ 0.6 và LTI $\ge$ 0.8 để ngay lập tức ngăn chặn nguy cơ mất vốn ở các hồ sơ quá tải nợ.
-2. **Tối ưu hóa ngắn hạn (1 – 6 tháng)**: Triển khai kiểm tra bổ sung với nhóm thuê nhà (`RENT`); áp dụng biểu lãi suất cộng thêm đối với các khoản vay đảo nợ (+2%) và ưu đãi cho vay học tập/kinh doanh (-1%).
-3. **Chuyển đổi số dài hạn (6 – 12+ tháng)**: Tích hợp API mô hình Machine Learning vào toàn bộ hệ thống quầy giao dịch và kênh đăng ký trực tuyến; mở rộng mô hình sang các thị trường tương đồng như Úc, New Zealand.
+1. **Giai đoạn tức thì (0 – 30 ngày)**: Kích hoạt ngay bộ lọc chặn cứng DTI $\ge$ 0.6 và LTI $\ge$ 0.8 để ngăn chặn nguy cơ mất vốn ở các hồ sơ quá tải nợ.
+2. **Giai đoạn ngắn hạn (1 – 6 tháng)**: Triển khai kiểm tra bổ sung với nhóm thuê nhà (`RENT`); áp dụng biểu lãi suất cộng thêm đối với các khoản vay đảo nợ (+2%) và ưu đãi cho vay học tập/kinh doanh (-1%).
+3. **Giai đoạn dài hạn (6 – 12+ tháng)**: Tích hợp API mô hình Machine Learning vào toàn bộ hệ thống quầy giao dịch và kênh đăng ký trực tuyến; mở rộng mô hình sang các thị trường tương đồng như Úc, New Zealand.
 
 ---
 
-## 4. Mô Hình Học Máy & Hệ Thống Chấm Điểm Tự Động
+## 4. Mô Hình Học Máy & Hệ Thống Chấm Điểm FICO
 
 ### 4.1 Quy Trình Xử Lý Hồ Sơ & Chấm Điểm
 
