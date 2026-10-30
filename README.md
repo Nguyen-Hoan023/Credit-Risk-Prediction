@@ -255,7 +255,7 @@ Sau tìm tham số, notebook tách 10% train làm validation, đặt tối đa 1
 Ứng dụng chuyển đầu ra xác suất của LightGBM thành **điểm tín dụng nội bộ trên thang 300–850**, không phải mô hình FICO chính thức:
 
 $$
-\text{Score} = \operatorname{clip}_{[300,850]}\left(600 + \frac{20}{\ln 2}\ln\frac{1-p}{p}\right)
+\text{Score}=\min\left(850,\max\left(300,600+\frac{20}{\ln 2}\ln\left(\frac{1-p}{p}\right)\right)\right)
 $$
 
 Trong đó `p` được giới hạn trong `[10⁻⁶, 1−10⁻⁶]` trước khi lấy log và điểm cuối được chuyển thành số nguyên. `p=0,5` tương ứng 600 điểm; trước khi clipping và làm tròn, tăng 20 điểm tương ứng odds `(1−p)/p` tăng gấp đôi. Phép quy đổi giữ thứ tự rủi ro nhưng không tự hiệu chỉnh xác suất.
