@@ -8,7 +8,7 @@ Dự án kết nối **phân tích dữ liệu, mô hình học máy và ứng d
 
 ## 🎬 Video giới thiệu dự án
 
-[![Một quyết định, hai cách để sai — xem video giới thiệu Credit Risk Prediction](docs/images/project-video-cover.jpg)](docs/videos/credit-risk-prediction.mp4)
+[![Một quyết định, hai cách để sai — xem video giới thiệu Credit Risk Prediction](docs/images/project-video-cover.jpg)](https://raw.githubusercontent.com/Nguyen-Hoan023/Credit-Risk-Prediction/main/docs/videos/credit-risk-prediction.mp4)
 
 Video giới thiệu bài toán cân bằng giữa rủi ro và cơ hội, đi qua dữ liệu và EDA, quy trình LightGBM, rồi kết thúc bằng hệ thống chấm điểm tín dụng của dự án.
 
