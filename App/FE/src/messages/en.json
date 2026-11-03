@@ -6,7 +6,16 @@
   "nav": {
     "home": "Home",
     "apply": "Evaluate",
-    "history": "History"
+    "history": "History",
+    "primaryNavigation": "Primary navigation",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "languageLabel": "Language",
+    "languageSwitcher": {
+      "vi": "Tiếng Việt",
+      "en": "English"
+    },
+    "greeting": "Hello, {name}"
   },
   "languageSwitcher": {
     "vi": "Tiếng Việt",
@@ -26,6 +35,9 @@
   },
   "apply": {
     "pageTitle": "Loan Application Evaluation",
+    "accessTitle": "Sign in required",
+    "accessDescription": "Please sign in to use this feature.",
+    "loginNow": "Sign in",
     "errorTitle": "An error occurred during processing",
     "errorDefault": "An error occurred during evaluation"
   },
@@ -74,6 +86,7 @@
     "otherDebtPlaceholder": "e.g. 5000",
     "selectPlaceholder": "-- Select --",
     "submit": "Submit Evaluation",
+    "requiredNote": "* Required information",
     "submitting": "Evaluating..."
   },
   "options": {
@@ -166,6 +179,8 @@
     "clearHistory": "Clear History",
     "clearConfirm": "Are you sure you want to delete all evaluation history?",
     "loading": "Loading history...",
+    "loadError": "Couldn't load evaluation history. Please try again.",
+    "retry": "Try again",
     "emptyTitle": "No History",
     "emptyDescription": "You haven't performed any application evaluations yet.",
     "startNow": "Start Evaluating Now",

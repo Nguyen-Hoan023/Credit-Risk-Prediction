@@ -7,7 +7,8 @@ export default function Footer() {
   const t = useTranslations("footer");
   const pathname = usePathname();
 
-  if (pathname.includes("/admin")) return null;
+  const isAuthPage = ["/login", "/register", "/forgot-password", "/verify-otp"].some((path) => pathname.endsWith(path));
+  if (pathname.includes("/admin") || isAuthPage) return null;
 
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white">

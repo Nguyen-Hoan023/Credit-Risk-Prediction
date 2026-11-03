@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { RiskLevel } from "@/lib/types";
 import { SCORE_MIN, SCORE_MAX, RISK_COLORS } from "@/lib/constants";
 
@@ -13,6 +15,8 @@ export default function CreditScoreGauge({
   score,
   riskLevel,
 }: CreditScoreGaugeProps) {
+  const t = useTranslations("result");
+  const prefersReducedMotion = useReducedMotion();
   const [animatedScore, setAnimatedScore] = useState(SCORE_MIN);
   const [dashOffset, setDashOffset] = useState(283);
 
@@ -23,10 +27,17 @@ export default function CreditScoreGauge({
   const targetDashOffset = 283 - (283 * percentage) / 100;
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setAnimatedScore(score);
+      setDashOffset(targetDashOffset);
+      return;
+    }
+
     // Animate score number
     const duration = 1500;
     const startTime = Date.now();
     const startScore = SCORE_MIN;
+    let frameId = 0;
 
     const animateNumber = () => {
       const elapsed = Date.now() - startTime;
@@ -40,23 +51,31 @@ export default function CreditScoreGauge({
       );
 
       if (progress < 1) {
-        requestAnimationFrame(animateNumber);
+        frameId = requestAnimationFrame(animateNumber);
       }
     };
 
-    requestAnimationFrame(animateNumber);
+    frameId = requestAnimationFrame(animateNumber);
 
     // Animate circle — trigger after a brief delay for CSS transition
     const timer = setTimeout(() => {
       setDashOffset(targetDashOffset);
     }, 100);
 
-    return () => clearTimeout(timer);
-  }, [score, targetDashOffset]);
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timer);
+    };
+  }, [prefersReducedMotion, score, targetDashOffset]);
 
   return (
-    <div className="relative mx-auto flex h-52 w-52 items-center justify-center">
+    <div
+      role="img"
+      aria-label={`${t("creditScore")}: ${animatedScore} / ${SCORE_MAX}`}
+      className="relative mx-auto flex h-52 w-52 items-center justify-center"
+    >
       <svg
+        aria-hidden="true"
         className="-rotate-90"
         width="200"
         height="200"
@@ -84,7 +103,7 @@ export default function CreditScoreGauge({
           strokeDasharray="283"
           strokeDashoffset={dashOffset}
           style={{
-            transition: "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: prefersReducedMotion ? "none" : "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
       </svg>
@@ -97,7 +116,7 @@ export default function CreditScoreGauge({
         >
           {animatedScore}
         </span>
-        <span className="mt-1 text-sm text-slate-400">/ {SCORE_MAX}</span>
+        <span className="mt-1 text-sm text-slate-500">/ {SCORE_MAX}</span>
       </div>
     </div>
   );

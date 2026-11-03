@@ -19,19 +19,18 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
 
   return (
     <div
-      className="mx-auto w-full max-w-2xl animate-fade-in rounded-2xl p-6 shadow-lg sm:p-8"
+      className="mx-auto w-full max-w-3xl animate-fade-in rounded-2xl border bg-white p-5 sm:p-8"
       style={{
-        backgroundColor: colors.bg,
-        border: `2px solid ${colors.border}`,
+        borderColor: colors.border,
       }}
     >
       {/* Header */}
-      <div className="mb-6 text-center">
+      <div className="mb-6">
         <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
           {title}
         </h2>
         <span
-          className="mt-3 inline-block rounded-full px-4 py-1 text-xs font-bold"
+          className="mt-3 inline-flex min-h-8 items-center rounded-md px-3 py-1 text-xs font-semibold"
           style={{
             backgroundColor: colors.badge_bg,
             color: colors.badge_text,
@@ -48,8 +47,8 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
       />
 
       {/* Info Cards */}
-      <div className="mt-6 grid grid-cols-3 gap-3">
-        <div className="rounded-xl bg-white p-3 text-center shadow-sm">
+      <div className="mt-6 grid grid-cols-1 divide-y divide-slate-200 border-y border-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <div className="py-4 text-center sm:px-3 sm:py-3">
           <p className="text-xs text-slate-500">{t("approvalScore")}</p>
           <p
             className="mt-1 text-lg font-bold"
@@ -58,13 +57,13 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
             {result.approval_probability}%
           </p>
         </div>
-        <div className="rounded-xl bg-white p-3 text-center shadow-sm">
+        <div className="py-4 text-center sm:px-3 sm:py-3">
           <p className="text-xs text-slate-500">{t("resultLabel")}</p>
           <p className="mt-1 text-lg font-bold text-slate-900">
             {t(`decisionShort.${result.decision}` as any)}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-3 text-center shadow-sm">
+        <div className="py-4 text-center sm:px-3 sm:py-3">
           <p className="text-xs text-slate-500">{t("riskLevelLabel")}</p>
           <p
             className="mt-1 text-lg font-bold"
@@ -87,9 +86,8 @@ export default function ResultCard({ result, onReset }: ResultCardProps) {
       <div className="mt-6 text-center">
         <button
           onClick={onReset}
-          className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:shadow-md"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-50"
         >
-          <span>📋</span>
           {t("newApplication")}
         </button>
       </div>

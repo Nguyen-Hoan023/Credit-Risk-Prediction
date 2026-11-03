@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAccessToken } from "@/lib/auth";
-import Link from "next/link";
 import { Eye } from "lucide-react";
 import { fetchCreditHistory } from "@/lib/api";
 import HistoryDetailModal from "@/components/HistoryDetailModal";
@@ -10,6 +9,7 @@ import HistoryDetailModal from "@/components/HistoryDetailModal";
 export default function AdminPredictions() {
   const [predictions, setPredictions] = useState<any[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const returnFocusRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -21,69 +21,80 @@ export default function AdminPredictions() {
   }, []);
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6">Tất cả hồ sơ dự đoán</h2>
+    <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
+      <header className="mb-6">
+        <p className="text-sm font-medium text-blue-800">NovaBank CreditRisk</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Tất cả hồ sơ dự đoán</h1>
+        <p className="mt-2 text-sm text-slate-600">Danh sách các hồ sơ đã được đánh giá trong hệ thống.</p>
+      </header>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[980px] border-collapse text-left text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm">
-              <th className="p-4 font-medium">Mã HS</th>
-              <th className="p-4 font-medium">Người đánh giá</th>
-              <th className="p-4 font-medium">Khoản vay</th>
-              <th className="p-4 font-medium">Điểm TD</th>
-              <th className="p-4 font-medium">Mức Rủi ro</th>
-              <th className="p-4 font-medium">Quyết định</th>
-              <th className="p-4 font-medium">Ngày tạo</th>
-              <th className="p-4 font-medium text-center">Chi tiết</th>
+            <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+              <th scope="col" className="px-4 py-3.5">Mã HS</th>
+              <th scope="col" className="px-4 py-3.5">Người đánh giá</th>
+              <th scope="col" className="px-4 py-3.5">Khoản vay</th>
+              <th scope="col" className="px-4 py-3.5">Điểm TD</th>
+              <th scope="col" className="px-4 py-3.5">Mức rủi ro</th>
+              <th scope="col" className="px-4 py-3.5">Quyết định</th>
+              <th scope="col" className="px-4 py-3.5">Ngày tạo</th>
+              <th scope="col" className="px-4 py-3.5 text-center">Chi tiết</th>
             </tr>
           </thead>
           <tbody>
             {predictions.map(pred => (
-              <tr key={pred.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="p-4 font-medium text-gray-900">#{pred.id}</td>
-                <td className="p-4 text-gray-600">
+              <tr key={pred.id} className="border-b border-slate-100 text-slate-800 transition-colors last:border-0 hover:bg-slate-50">
+                <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-slate-950">#{pred.id}</td>
+                <td className="px-4 py-3.5 text-slate-600">
                   {pred.user ? (
                     <div>
-                      <div className="font-medium text-gray-900">{pred.user.full_name}</div>
-                      <div className="text-xs text-gray-500">{pred.user.email}</div>
+                      <div className="font-medium text-slate-900">{pred.user.full_name}</div>
+                      <div className="mt-0.5 text-xs text-slate-600">{pred.user.email}</div>
                     </div>
                   ) : (
-                    <span className="text-gray-400 italic">Hệ thống (cũ)</span>
+                    <span className="text-slate-600">Hệ thống (cũ)</span>
                   )}
                 </td>
-                <td className="p-4 font-medium">${pred.loan_amnt.toLocaleString()}</td>
-                <td className="p-4 font-bold text-blue-600">{pred.credit_score}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium 
-                    ${pred.risk_level === 'low' ? 'bg-green-100 text-green-700' : 
-                      pred.risk_level === 'high' ? 'bg-red-100 text-red-700' : 
-                      'bg-yellow-100 text-yellow-700'}`}>
+                <td className="whitespace-nowrap px-4 py-3.5 font-medium tabular-nums">${pred.loan_amnt.toLocaleString()}</td>
+                <td className="px-4 py-3.5 font-semibold tabular-nums text-blue-800">{pred.credit_score}</td>
+                <td className="px-4 py-3.5">
+                  <span className={`inline-flex min-h-7 items-center rounded-md px-2.5 py-1 text-xs font-semibold
+                    ${pred.risk_level === 'low' ? 'bg-emerald-50 text-emerald-800' :
+                      pred.risk_level === 'high' ? 'bg-red-50 text-red-800' :
+                      'bg-amber-50 text-amber-800'}`}>
                     {pred.risk_level.toUpperCase()}
                   </span>
                 </td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium 
-                    ${pred.decision === 'APPROVE' ? 'bg-green-100 text-green-700' : 
-                      pred.decision === 'REJECT' ? 'bg-red-100 text-red-700' : 
-                      'bg-yellow-100 text-yellow-700'}`}>
+                <td className="px-4 py-3.5">
+                  <span className={`inline-flex min-h-7 items-center rounded-md px-2.5 py-1 text-xs font-semibold
+                    ${pred.decision === 'APPROVE' ? 'bg-emerald-50 text-emerald-800' :
+                      pred.decision === 'REJECT' ? 'bg-red-50 text-red-800' :
+                      'bg-amber-50 text-amber-800'}`}>
                     {pred.decision}
                   </span>
                 </td>
-                <td className="p-4 text-gray-500 text-sm">
+                <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-600">
                   {new Date(pred.created_at).toLocaleString("vi-VN")}
                 </td>
-                <td className="p-4 text-center">
-                  <button onClick={() => setSelectedRecord(pred)} className="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    <Eye className="w-5 h-5" />
+                <td className="px-4 py-2 text-center">
+                  <button
+                    type="button"
+                    onClick={(event) => { returnFocusRef.current = event.currentTarget; setSelectedRecord(pred); }}
+                    aria-label={`Xem chi tiết hồ sơ #${pred.id}`}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                  >
+                    <Eye aria-hidden="true" className="size-5" />
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
         {predictions.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
+          <div className="border-t border-slate-200 px-4 py-10 text-center text-sm text-slate-600">
             Chưa có hồ sơ nào trong hệ thống.
           </div>
         )}
@@ -91,7 +102,7 @@ export default function AdminPredictions() {
 
       {/* Detail Modal */}
       {selectedRecord && (
-        <HistoryDetailModal selectedRecord={selectedRecord} onClose={() => setSelectedRecord(null)} />
+        <HistoryDetailModal selectedRecord={selectedRecord} onClose={() => { setSelectedRecord(null); returnFocusRef.current?.focus(); }} />
       )}
     </div>
   );

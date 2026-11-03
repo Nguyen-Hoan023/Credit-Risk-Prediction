@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { saveTokens } from "@/lib/auth";
+import { CircleAlert, CheckCircle2, Landmark, LoaderCircle, Timer } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
 
 const OTP_EXPIRE_SECONDS = 5 * 60; // 5 minutes
@@ -126,136 +126,99 @@ export default function VerifyOtpPage({ params }: { params: { locale: string } }
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "20px", fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    }}>
-      <div style={{ width: "100%", maxWidth: "440px", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "12px",
-            padding: "10px 22px", background: "rgba(255,255,255,0.05)",
-            borderRadius: "50px", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "14px",
-          }}>
-            <span style={{ fontSize: "22px" }}>🏦</span>
-            <span style={{ color: "#e2e8f0", fontWeight: 700, fontSize: "15px" }}>NovaBank CreditRisk</span>
+    <main className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="w-full max-w-md">
+        <header className="mb-6 text-center sm:mb-8">
+          <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-blue-800 text-white">
+            <Landmark aria-hidden="true" className="size-6" />
           </div>
-          <h1 style={{ color: "#fff", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>
-            {purpose === "verify_register" ? "Xác thực Email" : "Đặt lại mật khẩu"}
+          <p className="text-sm font-semibold tracking-wide text-blue-800">NovaBank CreditRisk</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+            {purpose === "verify_register" ? "Xác thực email" : "Đặt lại mật khẩu"}
           </h1>
-          <p style={{ color: "#64748b", fontSize: "13px", margin: 0 }}>
-            Mã OTP 6 số đã được gửi đến <strong style={{ color: "#94a3b8" }}>{email}</strong>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Mã OTP 6 số đã được gửi đến <strong className="font-semibold text-slate-900">{email}</strong>
           </p>
-        </div>
+        </header>
 
-        <div style={{
-          background: "rgba(30, 41, 59, 0.85)", backdropFilter: "blur(20px)",
-          borderRadius: "20px", border: "1px solid rgba(255,255,255,0.1)",
-          padding: "36px", boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
-        }}>
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           {error && (
-            <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", color: "#fca5a5", fontSize: "14px" }}>
-              ⚠️ {error}
+            <div role="alert" className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-800">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
           {success && (
-            <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", color: "#86efac", fontSize: "14px" }}>
-              ✅ {success}
+            <div role="status" className="mb-5 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3.5 text-sm text-emerald-800">
+              <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              <span>{success}</span>
             </div>
           )}
 
-          {/* Countdown */}
-          <div style={{ textAlign: "center", marginBottom: "28px" }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
-              padding: "10px 20px",
-              background: timeLeft > 0 ? "rgba(59,130,246,0.1)" : "rgba(239,68,68,0.1)",
-              border: `1px solid ${timeLeft > 0 ? "rgba(59,130,246,0.3)" : "rgba(239,68,68,0.3)"}`,
-              borderRadius: "50px",
-            }}>
-              <span style={{ fontSize: "16px" }}>⏱</span>
-              <span style={{
-                color: timeLeft > 0 ? "#60a5fa" : "#f87171",
-                fontWeight: 700, fontSize: "20px", fontFamily: "monospace",
-              }}>
-                {minutes}:{seconds}
-              </span>
-              <span style={{ color: "#64748b", fontSize: "12px" }}>
-                {timeLeft > 0 ? "còn lại" : "đã hết hạn"}
-              </span>
+          <div className="mb-6 flex justify-center">
+            <div className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3.5 py-2 ${timeLeft > 0 ? "border-blue-200 bg-blue-50 text-blue-900" : "border-red-200 bg-red-50 text-red-800"}`}>
+              <Timer aria-hidden="true" className="size-4" />
+              <span className="font-mono text-base font-semibold tabular-nums">{minutes}:{seconds}</span>
+              <span className="text-xs text-slate-600">{timeLeft > 0 ? "còn lại" : "đã hết hạn"}</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* OTP Inputs */}
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "28px" }}>
+            <div role="group" aria-label="Mã xác thực OTP" className="mb-6 flex justify-center gap-1.5 sm:gap-2">
               {otp.map((digit, idx) => (
                 <input
                   key={idx}
                   ref={el => { inputRefs.current[idx] = el; }}
                   type="text"
                   inputMode="numeric"
+                  autoComplete={idx === 0 ? "one-time-code" : "off"}
                   maxLength={1}
                   value={digit}
+                  aria-label={`Chữ số OTP ${idx + 1} trong mã xác thực`}
+                  aria-invalid={Boolean(error)}
                   onChange={e => handleOtpChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
                   onPaste={idx === 0 ? handlePaste : undefined}
-                  style={{
-                    width: "52px", height: "60px",
-                    textAlign: "center", fontSize: "24px", fontWeight: 800,
-                    background: digit ? "rgba(59,130,246,0.15)" : "rgba(15,23,42,0.6)",
-                    border: `2px solid ${digit ? "#3b82f6" : "rgba(255,255,255,0.1)"}`,
-                    borderRadius: "12px", color: digit ? "#60a5fa" : "#e2e8f0",
-                    outline: "none", transition: "all 0.2s", cursor: "text",
-                    fontFamily: "monospace",
-                  }}
+                  style={{ width: "clamp(34px, 11vw, 52px)", height: "clamp(48px, 15vw, 58px)" }}
+                  className={`rounded-lg border text-center font-mono text-xl font-semibold text-slate-950 outline-none transition-colors focus:border-blue-700 focus:ring-2 focus:ring-blue-700/20 sm:text-2xl ${digit ? "border-blue-700 bg-blue-50" : "border-slate-300 bg-white"}`}
                 />
               ))}
             </div>
 
-            <button type="submit" disabled={loading || otp.join("").length < 6} style={{
-              width: "100%", padding: "14px",
-              background: (loading || otp.join("").length < 6) ? "#334155" : "linear-gradient(135deg, #1d4ed8, #7c3aed)",
-              border: "none", borderRadius: "10px", color: "#fff", fontSize: "15px",
-              fontWeight: 700, cursor: (loading || otp.join("").length < 6) ? "not-allowed" : "pointer",
-              boxShadow: (loading || otp.join("").length < 6) ? "none" : "0 4px 20px rgba(59,130,246,0.3)",
-              transition: "all 0.2s", marginBottom: "16px",
-            }}>
-              {loading ? "⏳ Đang xác nhận..." : "✅ Xác nhận OTP"}
+            <button
+              type="submit"
+              disabled={loading || otp.join("").length < 6}
+              className="mb-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-800 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600"
+            >
+              {loading ? <><LoaderCircle aria-hidden="true" className="size-4 animate-spin" />Đang xác nhận...</> : "Xác nhận OTP"}
             </button>
           </form>
 
-          {/* Resend */}
-          <div style={{ textAlign: "center" }}>
+          <div className="text-center">
             {resendCount < 3 ? (
-              <button onClick={handleResend} disabled={timeLeft > 0 || resending} style={{
-                background: "none", border: "none", cursor: timeLeft > 0 ? "not-allowed" : "pointer",
-                color: timeLeft > 0 ? "#475569" : "#60a5fa", fontSize: "13px", fontWeight: 600,
-              }}>
-                {resending ? "⏳ Đang gửi lại..." : timeLeft > 0 ? `Gửi lại sau ${minutes}:${seconds}` : `🔄 Gửi lại mã OTP (còn ${3 - resendCount} lần)`}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={timeLeft > 0 || resending}
+                className="inline-flex min-h-11 items-center justify-center px-3 text-sm font-semibold text-blue-800 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-slate-500 disabled:no-underline"
+              >
+                {resending ? <><LoaderCircle aria-hidden="true" className="mr-2 size-4 animate-spin" />Đang gửi lại...</> : timeLeft > 0 ? `Gửi lại sau ${minutes}:${seconds}` : `Gửi lại mã OTP (còn ${3 - resendCount} lần)`}
               </button>
             ) : (
-              <p style={{ color: "#64748b", fontSize: "12px", margin: 0 }}>
+              <p className="text-sm text-slate-600">
                 Đã gửi lại OTP tối đa 3 lần. Vui lòng{" "}
-                <Link href={`/${locale}/login`} style={{ color: "#60a5fa" }}>đăng nhập lại</Link>.
+                <Link href={`/${locale}/login`} className="font-semibold text-blue-800 underline-offset-4 hover:underline">đăng nhập lại</Link>.
               </p>
             )}
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-            <Link href={`/${locale}/login`} style={{ color: "#64748b", fontSize: "13px", textDecoration: "none" }}>
-              ← Quay lại đăng nhập
+          <div className="mt-5 border-t border-slate-200 pt-4 text-center">
+            <Link href={`/${locale}/login`} className="inline-flex min-h-11 items-center text-sm font-medium text-slate-600 underline-offset-4 hover:text-blue-800 hover:underline">
+              Quay lại đăng nhập
             </Link>
           </div>
-        </div>
+        </section>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        * { box-sizing: border-box; }
-      `}</style>
-    </div>
+    </main>
   );
 }
