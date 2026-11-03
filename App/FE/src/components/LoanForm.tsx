@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { BriefcaseBusiness, ChartNoAxesCombined, CreditCard, UserRound } from "lucide-react";
 import { LoanFormData } from "@/lib/types";
 import {
   LOAN_TERM_OPTIONS,
@@ -25,15 +26,18 @@ function FormSection({
   children,
 }: {
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <fieldset className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md sm:p-6">
-      <legend className="flex items-center gap-2 text-base font-bold text-slate-800">
-        <span>{icon}</span> {title}
+    <fieldset className="border-b border-slate-200 px-4 py-6 last:border-b-0 sm:px-6 sm:py-7">
+      <legend className="flex items-center gap-2.5 text-base font-semibold text-slate-900">
+        <span aria-hidden="true" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-800">
+          {icon}
+        </span>
+        {title}
       </legend>
-      <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
         {children}
       </div>
     </fieldset>
@@ -87,16 +91,18 @@ function InputField({
         min={min}
         max={max}
         placeholder={placeholder}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-all duration-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
+        className={`min-h-11 w-full rounded-lg border px-3 py-2.5 text-base text-slate-900 transition-colors placeholder:text-slate-500 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:text-sm ${
           error
             ? "border-red-500 bg-red-50/10 focus:border-red-500 focus:ring-red-500/20"
-            : "border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500/20"
+            : "border-slate-300 bg-white"
         }`}
       />
       {error ? (
-        <p className="mt-1 text-xs font-semibold text-red-500">{error}</p>
+        <p id={`${id}-error`} role="alert" className="mt-1 text-sm font-medium text-red-700">{error}</p>
       ) : (
-        hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>
+        hint && <p id={`${id}-hint`} className="mt-1 text-sm text-slate-600">{hint}</p>
       )}
     </div>
   );
@@ -132,7 +138,7 @@ function SelectField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-all duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        className="min-h-11 w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:text-sm"
       >
         <option value="" disabled hidden>{placeholder || "-- Select --"}</option>
         {options.map((opt) => (
@@ -257,9 +263,9 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       {/* 1. Thông tin cá nhân */}
-      <FormSection title={t("personalInfo")} icon="👤">
+      <FormSection title={t("personalInfo")} icon={<UserRound className="h-[18px] w-[18px]" />}>
         <InputField
           id="person_age"
           label={t("age")}
@@ -324,7 +330,7 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
       </FormSection>
 
       {/* 2. Thông tin khoản vay */}
-      <FormSection title={t("loanInfo")} icon="💳">
+      <FormSection title={t("loanInfo")} icon={<CreditCard className="h-[18px] w-[18px]" />}>
         <InputField
           id="loan_amnt"
           label={t("loanAmount")}
@@ -369,7 +375,7 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
       </FormSection>
 
       {/* 3. Lịch sử tín dụng */}
-      <FormSection title={t("creditHistory")} icon="📋">
+      <FormSection title={t("creditHistory")} icon={<ChartNoAxesCombined className="h-[18px] w-[18px]" />}>
         <InputField
           id="cb_person_cred_hist_length"
           label={t("credHistLength")}
@@ -425,7 +431,7 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
       </FormSection>
 
       {/* 4. Nợ khác */}
-      <FormSection title={t("otherFinance")} icon="💰">
+      <FormSection title={t("otherFinance")} icon={<BriefcaseBusiness className="h-[18px] w-[18px]" />}>
         <InputField
           id="other_debt"
           label={t("otherDebt")}
@@ -439,11 +445,12 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
       </FormSection>
 
       {/* Submit Button */}
-      <div className="text-center">
+      <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <span className="text-sm text-slate-600">{t("requiredNote")}</span>
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:bg-blue-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:opacity-60 sm:min-w-56"
         >
           {isLoading ? (
             <>
@@ -470,7 +477,6 @@ export default function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
             </>
           ) : (
             <>
-              <span></span>
               {t("submit")}
             </>
           )}

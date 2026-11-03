@@ -1,7 +1,9 @@
 "use client";
+
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CircleAlert, Eye, EyeOff, Landmark } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
 
 export default function RegisterPage({ params }: { params: { locale: string } }) {
@@ -24,7 +26,7 @@ export default function RegisterPage({ params }: { params: { locale: string } })
 
   const strength = pwStrength(form.password);
   const strengthLabel = ["", "Yếu", "Trung bình", "Tốt", "Mạnh"][strength];
-  const strengthColor = ["", "#ef4444", "#f59e0b", "#22c55e", "#3b82f6"][strength];
+  const strengthColor = ["", "#b42318", "#a15c00", "#18794e", "#1d4ed8"][strength];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,160 +54,100 @@ export default function RegisterPage({ params }: { params: { locale: string } })
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "20px", fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    }}>
-      <div style={{ width: "100%", maxWidth: "460px", position: "relative", zIndex: 1 }}>
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "12px",
-            padding: "10px 22px", background: "rgba(255,255,255,0.05)",
-            borderRadius: "50px", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "14px",
-          }}>
-            <span style={{ fontSize: "22px" }}>🏦</span>
-            <span style={{ color: "#e2e8f0", fontWeight: 700, fontSize: "15px" }}>NovaBank CreditRisk</span>
+    <main className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4 py-8 sm:px-6">
+      <div className="w-full max-w-lg">
+        <header className="mb-6 text-center">
+          <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-blue-800 text-white">
+            <Landmark aria-hidden="true" className="size-6" />
           </div>
-          <h1 style={{ color: "#fff", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Đăng ký tài khoản</h1>
-          <p style={{ color: "#64748b", fontSize: "13px", margin: 0 }}>Tạo tài khoản nhân viên mới</p>
-        </div>
+          <p className="text-sm font-semibold tracking-wide text-blue-800">NovaBank CreditRisk</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Đăng ký tài khoản</h1>
+          <p className="mt-2 text-sm text-slate-600">Tạo tài khoản nhân viên mới</p>
+        </header>
 
-        <div style={{
-          background: "rgba(30, 41, 59, 0.85)", backdropFilter: "blur(20px)",
-          borderRadius: "20px", border: "1px solid rgba(255,255,255,0.1)",
-          padding: "36px", boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
-        }}>
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           {error && (
-            <div style={{
-              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
-              borderRadius: "10px", padding: "12px 16px", marginBottom: "20px",
-              color: "#fca5a5", fontSize: "14px",
-            }}>⚠️ {error}</div>
+            <div id="register-error" role="alert" className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-800">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              <span>{error}</span>
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            {/* Full Name */}
+          <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
             <div>
-              <label style={{ color: "#94a3b8", fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "7px" }}>
-                👤 Họ và tên
-              </label>
-              <input type="text" value={form.full_name} required minLength={2}
+              <label htmlFor="register-name" className="mb-1.5 block text-sm font-semibold text-slate-800">Họ và tên</label>
+              <input
+                id="register-name" type="text" autoComplete="name" value={form.full_name} required minLength={2}
                 onChange={e => setForm({ ...form, full_name: e.target.value })}
-                placeholder="Nguyễn Văn A"
-                style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "#3b82f6"}
-                onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                placeholder="Nguyễn Văn A" aria-invalid={Boolean(error)} aria-describedby={error ? "register-error" : undefined}
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-950 placeholder:text-slate-500 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/20 sm:text-sm"
               />
             </div>
 
-            {/* Email */}
             <div>
-              <label style={{ color: "#94a3b8", fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "7px" }}>
-                ✉️ Email
-              </label>
-              <input type="email" value={form.email} required
+              <label htmlFor="register-email" className="mb-1.5 block text-sm font-semibold text-slate-800">Email</label>
+              <input
+                id="register-email" type="email" autoComplete="email" value={form.email} required
                 onChange={e => setForm({ ...form, email: e.target.value })}
-                placeholder="email@novabank.com"
-                style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "#3b82f6"}
-                onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                placeholder="email@novabank.com" aria-invalid={Boolean(error)} aria-describedby={error ? "register-error" : undefined}
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-950 placeholder:text-slate-500 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/20 sm:text-sm"
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label style={{ color: "#94a3b8", fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "7px" }}>
-                🔐 Mật khẩu
-              </label>
-              <div style={{ position: "relative" }}>
-                <input type={showPw ? "text" : "password"} value={form.password} required minLength={8}
+              <label htmlFor="register-password" className="mb-1.5 block text-sm font-semibold text-slate-800">Mật khẩu</label>
+              <div className="relative">
+                <input
+                  id="register-password" type={showPw ? "text" : "password"} autoComplete="new-password" value={form.password} required minLength={8}
                   onChange={e => setForm({ ...form, password: e.target.value })}
-                  placeholder="Tối thiểu 8 ký tự"
-                  style={{ ...inputStyle, paddingRight: "48px" }}
-                  onFocus={e => e.target.style.borderColor = "#3b82f6"}
-                  onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                  placeholder="Tối thiểu 8 ký tự" aria-invalid={Boolean(error)} aria-describedby="password-strength"
+                  className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 pr-12 text-base text-slate-950 placeholder:text-slate-500 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/20 sm:text-sm"
                 />
-                <button type="button" onClick={() => setShowPw(!showPw)}
-                  style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "16px" }}>
-                  {showPw ? "🙈" : "👁️"}
+                <button type="button" onClick={() => setShowPw(!showPw)} aria-label={showPw ? "Ẩn mật khẩu" : "Hiện mật khẩu"} aria-pressed={showPw}
+                  className="absolute right-1 top-1/2 inline-flex min-h-10 min-w-10 -translate-y-1/2 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-700">
+                  {showPw ? <EyeOff aria-hidden="true" className="size-5" /> : <Eye aria-hidden="true" className="size-5" />}
                 </button>
               </div>
-              {/* Strength bar */}
               {form.password && (
-                <div style={{ marginTop: "8px" }}>
-                  <div style={{ display: "flex", gap: "4px", marginBottom: "4px" }}>
+                <div id="password-strength" className="mt-2" aria-label={`Độ mạnh mật khẩu: ${strengthLabel}`}>
+                  <div className="flex gap-1" aria-hidden="true">
                     {[1, 2, 3, 4].map(i => (
-                      <div key={i} style={{
-                        flex: 1, height: "3px", borderRadius: "2px",
-                        background: i <= strength ? strengthColor : "#1e293b",
-                        transition: "background 0.3s",
-                      }} />
+                      <div key={i} className="h-1 flex-1 rounded-full" style={{ background: i <= strength ? strengthColor : "#dce3ec" }} />
                     ))}
                   </div>
-                  <span style={{ color: strengthColor, fontSize: "11px", fontWeight: 600 }}>{strengthLabel}</span>
+                  <span className="mt-1 block text-xs font-semibold" style={{ color: strengthColor }}>{strengthLabel}</span>
                 </div>
               )}
             </div>
 
-            {/* Confirm Password */}
             <div>
-              <label style={{ color: "#94a3b8", fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "7px" }}>
-                🔒 Xác nhận mật khẩu
-              </label>
-              <input type={showPw ? "text" : "password"} value={form.confirm_password} required
+              <label htmlFor="register-confirm-password" className="mb-1.5 block text-sm font-semibold text-slate-800">Xác nhận mật khẩu</label>
+              <input
+                id="register-confirm-password" type={showPw ? "text" : "password"} autoComplete="new-password" value={form.confirm_password} required
                 onChange={e => setForm({ ...form, confirm_password: e.target.value })}
-                placeholder="Nhập lại mật khẩu"
-                style={{
-                  ...inputStyle,
-                  borderColor: form.confirm_password && form.confirm_password !== form.password ? "#ef4444" : "rgba(255,255,255,0.1)",
-                }}
-                onFocus={e => e.target.style.borderColor = "#3b82f6"}
-                onBlur={e => e.target.style.borderColor = form.confirm_password !== form.password ? "#ef4444" : "rgba(255,255,255,0.1)"}
+                placeholder="Nhập lại mật khẩu" aria-invalid={Boolean(form.confirm_password && form.confirm_password !== form.password)}
+                aria-describedby={form.confirm_password && form.confirm_password !== form.password ? "confirm-password-error" : undefined}
+                className={`min-h-11 w-full rounded-lg border bg-white px-3.5 py-2.5 text-base text-slate-950 placeholder:text-slate-500 focus:outline-none focus:ring-2 sm:text-sm ${form.confirm_password && form.confirm_password !== form.password ? "border-red-500 focus:ring-red-500/20" : "border-slate-300 focus:border-blue-700 focus:ring-blue-700/20"}`}
               />
               {form.confirm_password && form.confirm_password !== form.password && (
-                <p style={{ color: "#ef4444", fontSize: "11px", marginTop: "4px" }}>Mật khẩu không khớp</p>
+                <p id="confirm-password-error" role="alert" className="mt-1 text-sm text-red-700">Mật khẩu không khớp</p>
               )}
             </div>
 
-            <button type="submit" disabled={loading} style={{
-              width: "100%", padding: "14px",
-              background: loading ? "#334155" : "linear-gradient(135deg, #1d4ed8, #7c3aed)",
-              border: "none", borderRadius: "10px", color: "#fff", fontSize: "15px",
-              fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading ? "none" : "0 4px 20px rgba(59,130,246,0.3)",
-              transition: "all 0.2s",
-            }}>
-              {loading ? "⏳ Đang đăng ký..." : "📨 Đăng ký & nhận OTP"}
+            <button type="submit" disabled={loading}
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-800 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 disabled:cursor-wait disabled:opacity-70">
+              {loading ? "Đang đăng ký..." : "Đăng ký & nhận OTP"}
             </button>
           </form>
 
-          <div style={{ textAlign: "center", marginTop: "22px", paddingTop: "22px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-            <p style={{ color: "#64748b", fontSize: "13px", margin: 0 }}>
+          <div className="mt-6 border-t border-slate-200 pt-5 text-center">
+            <p className="text-sm text-slate-600">
               Đã có tài khoản?{" "}
-              <Link href={`/${locale}/login`} style={{ color: "#60a5fa", fontWeight: 600, textDecoration: "none" }}>
-                Đăng nhập
-              </Link>
+              <Link href={`/${locale}/login`} className="font-semibold text-blue-800 underline-offset-4 hover:underline">Đăng nhập</Link>
             </p>
           </div>
-        </div>
+        </section>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        input::placeholder { color: #475569; }
-        * { box-sizing: border-box; }
-      `}</style>
-    </div>
+    </main>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "12px 16px",
-  background: "rgba(15, 23, 42, 0.6)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: "10px", color: "#e2e8f0", fontSize: "14px",
-  outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
-};

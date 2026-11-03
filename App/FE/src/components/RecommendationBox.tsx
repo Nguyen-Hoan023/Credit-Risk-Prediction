@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { CheckCircle2, Lightbulb, TriangleAlert, XCircle } from "lucide-react";
 import { RiskLevel, RecommendationItem } from "@/lib/types";
 import { RISK_COLORS } from "@/lib/constants";
 
@@ -17,8 +18,8 @@ export default function RecommendationBox({
   const tRec = useTranslations("recommendations");
   const colors = RISK_COLORS[riskLevel];
 
-  const icon =
-    riskLevel === "low" ? "✅" : riskLevel === "medium" ? "⚠️" : "❌";
+  const StatusIcon =
+    riskLevel === "low" ? CheckCircle2 : riskLevel === "medium" ? TriangleAlert : XCircle;
 
   // Translate a recommendation item using its code + params
   const translateRecommendation = (rec: RecommendationItem): string => {
@@ -47,13 +48,13 @@ export default function RecommendationBox({
         border: `1px solid ${colors.border}`,
       }}
     >
-      <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
-        <span>💡</span> {t("recommendationsTitle")}
+      <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <Lightbulb aria-hidden="true" className="h-4 w-4" /> {t("recommendationsTitle")}
       </h4>
       <ul className="space-y-2">
         {recommendations.map((rec, i) => (
           <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-            <span className="mt-0.5 shrink-0">{icon}</span>
+            <StatusIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{translateRecommendation(rec)}</span>
           </li>
         ))}

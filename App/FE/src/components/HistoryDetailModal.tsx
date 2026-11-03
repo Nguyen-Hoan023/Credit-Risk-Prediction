@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { BriefcaseBusiness, ChartNoAxesColumn, UserRound, X } from "lucide-react";
 import { HistoryRecord, RecommendationItem } from "@/lib/types";
-import { RISK_COLORS } from "@/lib/constants";
 
 interface Props {
   selectedRecord: HistoryRecord;
@@ -10,10 +11,43 @@ interface Props {
 }
 
 export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations("history");
   const tResult = useTranslations("result");
   const tRec = useTranslations("recommendations");
   const tOptions = useTranslations("options");
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -80,21 +114,34 @@ export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-detail-title"
+        className="relative max-h-[calc(100dvh-1rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:max-h-[calc(100dvh-2rem)] sm:p-6"
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">{t("modalTitle")}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 id="history-detail-title" className="text-lg font-bold text-slate-950 sm:text-xl">{t("modalTitle")}</h3>
+            <p className="mt-1 text-xs text-slate-600">
               {t("modalId")}: #{selectedRecord.id} • {selectedRecord.user && `Người đánh giá: ${selectedRecord.user.full_name} • `}{t("modalTime")}: {formatDate(selectedRecord.created_at)}
             </p>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label={t("modalClose")}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
           >
-            <span className="text-xl">✕</span>
+            <X aria-hidden="true" className="size-5" />
           </button>
         </div>
 
@@ -136,7 +183,7 @@ export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               {/* Thông tin cá nhân */}
               <div>
-                <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1">👤 {t("personalInfo")}</h4>
+                <h4 className="mb-2 flex items-center gap-2 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-blue-800"><UserRound aria-hidden="true" className="size-4" />{t("personalInfo")}</h4>
                 <ul className="space-y-1.5 text-xs">
                   <li><span className="text-slate-500">{t("colAge")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.person_age} {t("ageUnit")}</span></li>
                   <li><span className="text-slate-500">{t("yearlyIncome")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.person_income)}</span></li>
@@ -149,7 +196,7 @@ export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
 
               {/* Thông tin khoản vay */}
               <div>
-                <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1">{t("loanProposal")}</h4>
+                <h4 className="mb-2 flex items-center gap-2 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-blue-800"><BriefcaseBusiness aria-hidden="true" className="size-4" />{t("loanProposal")}</h4>
                 <ul className="space-y-1.5 text-xs">
                   <li><span className="text-slate-500">{t("loanAmount")}:</span> <span className="font-semibold text-slate-900">{formatCurrency(selectedRecord.loan_amnt)}</span></li>
                   <li><span className="text-slate-500">{t("interestRate")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.loan_int_rate !== null ? `${selectedRecord.formData.loan_int_rate}%` : t("notDetermined")}</span></li>
@@ -160,7 +207,7 @@ export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
 
               {/* Lịch sử tín dụng và nợ */}
               <div>
-                <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1"> {t("historyDebt")}</h4>
+                <h4 className="mb-2 flex items-center gap-2 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-blue-800"><ChartNoAxesColumn aria-hidden="true" className="size-4" />{t("historyDebt")}</h4>
                 <ul className="space-y-1.5 text-xs">
                   <li><span className="text-slate-500">{t("creditHistoryYears")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.cb_person_cred_hist_length} {t("yearUnit")}</span></li>
                   <li><span className="text-slate-500">{t("creditAccounts")}:</span> <span className="font-semibold text-slate-900">{selectedRecord.formData.open_accounts} {t("accountUnit")}</span></li>
@@ -175,8 +222,8 @@ export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
             {/* 3. Khuyến nghị chi tiết */}
             {selectedRecord.recommendations && selectedRecord.recommendations.length > 0 && (
               <div>
-                <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 border-b border-indigo-100 pb-1">{t("recommendationsTitle")}</h4>
-                <ul className="list-inside list-disc space-y-1 text-xs text-slate-700 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
+                <h4 className="mb-2 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-blue-800">{t("recommendationsTitle")}</h4>
+                <ul className="list-inside list-disc space-y-1 rounded-lg border border-blue-100 bg-blue-50/70 p-3 text-sm text-slate-700">
                   {selectedRecord.recommendations.map((rec, i) => (
                     <li key={i}>{translateRecommendation(rec)}</li>
                   ))}
@@ -210,7 +257,7 @@ export default function HistoryDetailModal({ selectedRecord, onClose }: Props) {
         <div className="mt-6 flex justify-end border-t border-slate-200 pt-4">
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
           >
             {t("modalClose")}
           </button>

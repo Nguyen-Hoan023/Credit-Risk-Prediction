@@ -6,7 +6,16 @@
   "nav": {
     "home": "Trang chủ",
     "apply": "Thẩm định",
-    "history": "Lịch sử"
+    "history": "Lịch sử",
+    "primaryNavigation": "Điều hướng chính",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "languageLabel": "Ngôn ngữ",
+    "languageSwitcher": {
+      "vi": "Tiếng Việt",
+      "en": "English"
+    },
+    "greeting": "Xin chào, {name}"
   },
   "languageSwitcher": {
     "vi": "Tiếng Việt",
@@ -26,6 +35,9 @@
   },
   "apply": {
     "pageTitle": "Đánh Giá Hồ Sơ Vay",
+    "accessTitle": "Yêu cầu đăng nhập",
+    "accessDescription": "Bạn vui lòng đăng nhập để xem và sử dụng tính năng này.",
+    "loginNow": "Đăng nhập ngay",
     "errorTitle": "Đã xảy ra lỗi khi xử lý",
     "errorDefault": "Đã xảy ra lỗi khi đánh giá"
   },
@@ -74,6 +86,7 @@
     "otherDebtPlaceholder": "VD: 5000",
     "selectPlaceholder": "-- Chọn --",
     "submit": "Gửi đánh giá",
+    "requiredNote": "* Thông tin bắt buộc",
     "submitting": "Đang đánh giá..."
   },
   "options": {
@@ -166,6 +179,8 @@
     "clearHistory": "Xóa lịch sử",
     "clearConfirm": "Bạn có chắc chắn muốn xóa toàn bộ lịch sử đánh giá không?",
     "loading": "Đang tải lịch sử...",
+    "loadError": "Không thể tải lịch sử hồ sơ. Vui lòng thử lại.",
+    "retry": "Thử lại",
     "emptyTitle": "Không có lịch sử",
     "emptyDescription": "Bạn chưa thực hiện bất kỳ đánh giá hồ sơ nào.",
     "startNow": "Bắt đầu đánh giá ngay",
