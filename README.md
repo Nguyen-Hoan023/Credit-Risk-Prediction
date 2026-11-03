@@ -6,14 +6,6 @@
 
 Dự án kết nối **phân tích dữ liệu, mô hình học máy và ứng dụng chấm điểm tín dụng**: khám phá dữ liệu hồ sơ vay, thiết kế đặc trưng, so sánh mô hình, phân tích sai số và chuyển kết quả thành điểm tín dụng nội bộ cùng các quy tắc phân luồng. Notebook lưu quá trình thực nghiệm; ứng dụng web sử dụng pipeline đã xuất để chấm điểm từng hồ sơ.
 
-## 🎬 Video giới thiệu dự án
-
-[![Một quyết định, hai cách để sai — xem video giới thiệu Credit Risk Prediction](docs/images/project-video-cover.jpg)](https://raw.githubusercontent.com/Nguyen-Hoan023/Credit-Risk-Prediction/main/docs/videos/credit-risk-prediction.mp4)
-
-Video giới thiệu bài toán cân bằng giữa rủi ro và cơ hội, đi qua dữ liệu và EDA, quy trình LightGBM, rồi kết thúc bằng hệ thống chấm điểm tín dụng của dự án.
-
----
-
 ## 1. Bối Cảnh Nghiệp Vụ & Mục Tiêu Dự Án
 
 ### 1.1 Bài toán nghiệp vụ
