@@ -368,20 +368,6 @@ Notebook sử dụng `shap.TreeExplainer` trên mô hình tuned sau bước impu
 
 Trục SHAP ở cấu hình TreeExplainer hiện tại biểu diễn đóng góp vào raw output/log-odds, không phải số điểm phần trăm xác suất hoặc điểm tín dụng. Các biến phân loại hiển thị màu xám, nên diễn giải category dựa thêm vào bảng nhóm trong notebook. SHAP mô tả cách mô hình sử dụng dữ liệu; không chứng minh nguyên nhân gây default và chưa được tích hợp vào API để giải thích từng hồ sơ trực tuyến.
 
-### 5.5 Phạm vi kiểm định & Chất lượng xác suất
-
-| Kiểm tra | Kết quả / Trạng thái hiện tại |
-|---|---|
-| Train–test gap | Tuned ROC-AUC: **0,9781 / 0,9431**; AP: **0,9438 / 0,8916**. Có chênh lệch hiệu năng, chưa đủ cơ sở khẳng định không overfit. |
-| Kiểm định theo thời gian | Notebook hiện chia ngẫu nhiên có phân tầng; chưa có out-of-time test. |
-| Calibration | Chưa có calibration curve, Brier score, log loss trên test hoặc bước hiệu chỉnh xác suất được lưu trong quy trình hiện tại. |
-| Đối chiếu xác suất theo band | Nhóm Low có xác suất dự đoán trung bình **7,04%**, so với default rate **1,97%**. Đây là dấu hiệu cần đánh giá calibration kỹ hơn. |
-| So sánh phương pháp cân bằng | Code hiện dùng class weights; chưa có bảng thực nghiệm SMOTE để kết luận phương pháp nào vượt trội. |
-
-Khả năng xếp hạng tốt không tự chứng minh xác suất đã được hiệu chỉnh. Vì đầu ra còn được dùng để quy đổi điểm, chất lượng xác suất và hiệu quả của quyết định sau business rules cần được đánh giá riêng với cùng định nghĩa nhãn và phạm vi dữ liệu.
-
----
-
 ## 6. Báo Cáo Quản Trị Trực Quan (Power BI Dashboard)
 
 Báo cáo điều hành chuyên sâu nằm tại file [`Power BI/risk.pbix`](Power%20BI/risk.pbix), cung cấp 4 góc nhìn quản trị cho ban lãnh đạo ngân hàng:
